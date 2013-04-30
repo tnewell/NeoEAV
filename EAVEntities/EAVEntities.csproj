@@ -1,0 +1,283 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{948451BC-904D-4F88-96C6-CB5350A33F69}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EAVEntities</RootNamespace>
+    <AssemblyName>EAVEntities</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303291900126_EAV_Test.cs" />
+    <Compile Include="Migrations\201303291900126_EAV_Test.Designer.cs">
+      <DependentUpon>201303291900126_EAV_Test.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303291903566_EAV_Test1.cs" />
+    <Compile Include="Migrations\201303291903566_EAV_Test1.Designer.cs">
+      <DependentUpon>201303291903566_EAV_Test1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292042017_EAV_Test2.cs" />
+    <Compile Include="Migrations\201303292042017_EAV_Test2.Designer.cs">
+      <DependentUpon>201303292042017_EAV_Test2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292044320_EAV_Test3.cs" />
+    <Compile Include="Migrations\201303292044320_EAV_Test3.Designer.cs">
+      <DependentUpon>201303292044320_EAV_Test3.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292048459_EAV_Test4.cs" />
+    <Compile Include="Migrations\201303292048459_EAV_Test4.Designer.cs">
+      <DependentUpon>201303292048459_EAV_Test4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292052217_EAV_Test5.cs" />
+    <Compile Include="Migrations\201303292052217_EAV_Test5.Designer.cs">
+      <DependentUpon>201303292052217_EAV_Test5.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292129096_EAV_Test6.cs" />
+    <Compile Include="Migrations\201303292129096_EAV_Test6.Designer.cs">
+      <DependentUpon>201303292129096_EAV_Test6.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292130449_EAV_Test7.cs" />
+    <Compile Include="Migrations\201303292130449_EAV_Test7.Designer.cs">
+      <DependentUpon>201303292130449_EAV_Test7.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292145331_EAV_Test8.cs" />
+    <Compile Include="Migrations\201303292145331_EAV_Test8.Designer.cs">
+      <DependentUpon>201303292145331_EAV_Test8.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292211399_EAV_Test9.cs" />
+    <Compile Include="Migrations\201303292211399_EAV_Test9.Designer.cs">
+      <DependentUpon>201303292211399_EAV_Test9.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292213386_EAV_Test10.cs" />
+    <Compile Include="Migrations\201303292213386_EAV_Test10.Designer.cs">
+      <DependentUpon>201303292213386_EAV_Test10.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292221259_EAV_Test11.cs" />
+    <Compile Include="Migrations\201303292221259_EAV_Test11.Designer.cs">
+      <DependentUpon>201303292221259_EAV_Test11.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303292225004_EAV_Test12.cs" />
+    <Compile Include="Migrations\201303292225004_EAV_Test12.Designer.cs">
+      <DependentUpon>201303292225004_EAV_Test12.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303301751105_EAV_Test13.cs" />
+    <Compile Include="Migrations\201303301751105_EAV_Test13.Designer.cs">
+      <DependentUpon>201303301751105_EAV_Test13.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303301757012_EAV_Test14.cs" />
+    <Compile Include="Migrations\201303301757012_EAV_Test14.Designer.cs">
+      <DependentUpon>201303301757012_EAV_Test14.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303301758573_EAV_Test15.cs" />
+    <Compile Include="Migrations\201303301758573_EAV_Test15.Designer.cs">
+      <DependentUpon>201303301758573_EAV_Test15.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303301809440_EAV_Test16.cs" />
+    <Compile Include="Migrations\201303301809440_EAV_Test16.Designer.cs">
+      <DependentUpon>201303301809440_EAV_Test16.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303310258069_EAV_Test17.cs" />
+    <Compile Include="Migrations\201303310258069_EAV_Test17.Designer.cs">
+      <DependentUpon>201303310258069_EAV_Test17.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303310301111_EAV_Test18.cs" />
+    <Compile Include="Migrations\201303310301111_EAV_Test18.Designer.cs">
+      <DependentUpon>201303310301111_EAV_Test18.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201303311947496_EAV_Test19.cs" />
+    <Compile Include="Migrations\201303311947496_EAV_Test19.Designer.cs">
+      <DependentUpon>201303311947496_EAV_Test19.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201304022112155_EAV_Test20.cs" />
+    <Compile Include="Migrations\201304022112155_EAV_Test20.Designer.cs">
+      <DependentUpon>201304022112155_EAV_Test20.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201304022115336_EAV_Test21.cs" />
+    <Compile Include="Migrations\201304022115336_EAV_Test21.Designer.cs">
+      <DependentUpon>201304022115336_EAV_Test21.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201304022116158_EAV_Test22.cs" />
+    <Compile Include="Migrations\201304022116158_EAV_Test22.Designer.cs">
+      <DependentUpon>201304022116158_EAV_Test22.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201304022148240_EAV_Test23.cs" />
+    <Compile Include="Migrations\201304022148240_EAV_Test23.Designer.cs">
+      <DependentUpon>201304022148240_EAV_Test23.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201304042218387_EAV_Test24.cs" />
+    <Compile Include="Migrations\201304042218387_EAV_Test24.Designer.cs">
+      <DependentUpon>201304042218387_EAV_Test24.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303291900126_EAV_Test.resx">
+      <DependentUpon>201303291900126_EAV_Test.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303291903566_EAV_Test1.resx">
+      <DependentUpon>201303291903566_EAV_Test1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292042017_EAV_Test2.resx">
+      <DependentUpon>201303292042017_EAV_Test2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292044320_EAV_Test3.resx">
+      <DependentUpon>201303292044320_EAV_Test3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292048459_EAV_Test4.resx">
+      <DependentUpon>201303292048459_EAV_Test4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292052217_EAV_Test5.resx">
+      <DependentUpon>201303292052217_EAV_Test5.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292129096_EAV_Test6.resx">
+      <DependentUpon>201303292129096_EAV_Test6.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292130449_EAV_Test7.resx">
+      <DependentUpon>201303292130449_EAV_Test7.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292145331_EAV_Test8.resx">
+      <DependentUpon>201303292145331_EAV_Test8.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292211399_EAV_Test9.resx">
+      <DependentUpon>201303292211399_EAV_Test9.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292213386_EAV_Test10.resx">
+      <DependentUpon>201303292213386_EAV_Test10.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292221259_EAV_Test11.resx">
+      <DependentUpon>201303292221259_EAV_Test11.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303292225004_EAV_Test12.resx">
+      <DependentUpon>201303292225004_EAV_Test12.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303301751105_EAV_Test13.resx">
+      <DependentUpon>201303301751105_EAV_Test13.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303301757012_EAV_Test14.resx">
+      <DependentUpon>201303301757012_EAV_Test14.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303301758573_EAV_Test15.resx">
+      <DependentUpon>201303301758573_EAV_Test15.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303301809440_EAV_Test16.resx">
+      <DependentUpon>201303301809440_EAV_Test16.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303310258069_EAV_Test17.resx">
+      <DependentUpon>201303310258069_EAV_Test17.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303310301111_EAV_Test18.resx">
+      <DependentUpon>201303310301111_EAV_Test18.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201303311947496_EAV_Test19.resx">
+      <DependentUpon>201303311947496_EAV_Test19.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201304022112155_EAV_Test20.resx">
+      <DependentUpon>201304022112155_EAV_Test20.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201304022115336_EAV_Test21.resx">
+      <DependentUpon>201304022115336_EAV_Test21.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201304022116158_EAV_Test22.resx">
+      <DependentUpon>201304022116158_EAV_Test22.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201304022148240_EAV_Test23.resx">
+      <DependentUpon>201304022148240_EAV_Test23.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201304042218387_EAV_Test24.resx">
+      <DependentUpon>201304042218387_EAV_Test24.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EAVEntitiesLib\EAVEntitiesLib.csproj">
+      <Project>{aaaef411-2507-4836-b018-5ebd55100392}</Project>
+      <Name>EAVEntitiesLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
