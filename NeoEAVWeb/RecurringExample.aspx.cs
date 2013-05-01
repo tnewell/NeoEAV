@@ -73,7 +73,7 @@ namespace NeoEAVWeb
         private void BindInstances()
         {
             Debug.WriteLine("BindInstances");
-            
+
             Subject subject = ctlSubjectContext.DataItem as Subject;
             if (subject != null)
             {
@@ -110,15 +110,6 @@ namespace NeoEAVWeb
             
             ctlInstanceContext.ContextSelector = ctlInstances.SelectedValue;
             
-            ctlProjectContext.DataBind();
-        }
-
-        protected void ctlChildInstance1List_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            Debug.WriteLine("ctlChildInstance1List_SelectedIndexChanged");
-
-            ctlChildInstanceContext1.ContextSelector = ctlChildInstance1List.SelectedValue;
-
             ctlProjectContext.DataBind();
         }
 

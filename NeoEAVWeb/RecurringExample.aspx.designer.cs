@@ -139,67 +139,13 @@ namespace NeoEAVWeb {
         protected global::NeoEAV.Web.UI.EAVContainerContextControl ctlChildContainerContext1;
         
         /// <summary>
-        /// ctlChildInstanceContext1 control.
+        /// ctlChildInstance1Repeater control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::NeoEAV.Web.UI.EAVInstanceContextControl ctlChildInstanceContext1;
-        
-        /// <summary>
-        /// ctlChildInstance1List control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ctlChildInstance1List;
-        
-        /// <summary>
-        /// ctlValue6 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::NeoEAV.Web.UI.EAVTextBox ctlValue6;
-        
-        /// <summary>
-        /// ctlValue7 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::NeoEAV.Web.UI.EAVTextBox ctlValue7;
-        
-        /// <summary>
-        /// ctlValue8 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::NeoEAV.Web.UI.EAVTextBox ctlValue8;
-        
-        /// <summary>
-        /// ctlValue9 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::NeoEAV.Web.UI.EAVTextBox ctlValue9;
-        
-        /// <summary>
-        /// ctlValue10 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::NeoEAV.Web.UI.EAVTextBox ctlValue10;
+        protected global::NeoEAV.Web.UI.EAVInstanceContextRepeater ctlChildInstance1Repeater;
         
         /// <summary>
         /// ctlChildContainerContext2 control.
