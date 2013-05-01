@@ -25,7 +25,7 @@ namespace NeoEAV.Web.UI
 
         public IEnumerable<Project> Projects { get { return(context.Projects); } }
 
-        protected string BuildContextValue(IEAVContextControl control)
+        protected string BuildContextValue(Control control)
         {
             if (control == null)
                 return (String.Empty);
@@ -34,19 +34,12 @@ namespace NeoEAV.Web.UI
             while (parent != null && !(parent is IEAVContextControl))
                 parent = parent.Parent;
 
-            return (String.Concat(BuildContextValue(parent as IEAVContextControl), parent == null ? String.Empty : "|", control.ContextSelector));
-        }
-
-        protected string BuildContextValue(IEAVDataControl control)
-        {
-            if (control == null)
-                return (String.Empty);
-
-            Control parent = control.Parent;
-            while (parent != null && !(parent is IEAVContextControl))
-                parent = parent.Parent;
-
-            return (BuildContextValue(parent as IEAVContextControl));
+            if (!(control is IEAVContextControl))
+                return (BuildContextValue(parent));
+            else if (parent == null)
+                return (((IEAVContextControl)control).ContextSelector);
+            else
+                return (String.Concat(BuildContextValue(parent), "|", ((IEAVContextControl)control).ContextSelector));
         }
 
         protected IEnumerable<IEAVDataControl> FindEAVValueControls(Control control)
@@ -115,7 +108,7 @@ namespace NeoEAV.Web.UI
             // we don't need to. Order by context maybe.
             foreach (IEAVDataControl control in FindEAVValueControls(contextControl))
             {
-                string[] contextValues = BuildContextValue(control).Split('|');
+                string[] contextValues = BuildContextValue(control as Control).Split('|');
                 if (contextValues.Length >= 5)
                 {
                     string strProject = contextValues[0];
@@ -172,14 +165,12 @@ namespace NeoEAV.Web.UI
 
     public interface IEAVContextControl
     {
-        Control Parent { get; }
         ContextType ContextType { get; }
         string ContextSelector { get; set; }
     }
 
     public interface IEAVDataControl
     {
-        Control Parent { get; }
         string RawValue { get; set; }
     }
 
@@ -197,35 +188,20 @@ namespace NeoEAV.Web.UI
 
         public virtual object DataSource { get; set; }
 
-        public object FindDataSource(string sourceName)
+        public static T FindAncestorDataItem<T>(Control control, ContextType ancestorContextType) where T : class
         {
-            ContextType parentContextType = UI.ContextType.Unknown;
-            switch (ContextType)
+            Control container = control != null ? control.Parent : null;
+            while (container != null)
             {
-                case UI.ContextType.Value:
-                    parentContextType = UI.ContextType.Instance;
-                    break;
-                case UI.ContextType.Attribute:
-                    parentContextType = UI.ContextType.Container;
-                    break;
-                case UI.ContextType.Instance:
-                    parentContextType = UI.ContextType.Subject;
-                    break;
-                case UI.ContextType.Container:
-                    parentContextType = UI.ContextType.Project;
-                    break;
-                case UI.ContextType.Subject:
-                    parentContextType = UI.ContextType.Project;
-                    break;
-                case UI.ContextType.Project:
-                    parentContextType = UI.ContextType.Unknown;
-                    break;
-                default:
-                    parentContextType = UI.ContextType.Unknown;
-                    break;
+                if (container is IEAVContextControl && ((IEAVContextControl)container).ContextType == ancestorContextType)
+                {
+                    return(DataBinder.GetDataItem(container) as T);
+                }
+
+                container = container.Parent;
             }
 
-            return(this.FindDataSource(parentContextType, sourceName));
+            return (null);
         }
     }
 
@@ -260,7 +236,8 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            DataSource = FindDataSource("Subjects");
+            Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
+            DataSource = project != null ? DataBinder.GetPropertyValue(project, "Subjects") : null;
 
             base.OnDataBinding(e);
         }
@@ -282,7 +259,8 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            DataSource = FindDataSource("Containers");
+            Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
+            DataSource = project != null ? DataBinder.GetPropertyValue(project, "Containers") : null;
 
             FilterDataSource();
 
@@ -294,7 +272,7 @@ namespace NeoEAV.Web.UI
             IEnumerable<Container> dataSource = DataSource as IEnumerable<Container>;
             if (dataSource != null)
             {
-                Container parentContainer = this.FindParentDataItem<Container>(ContextType.Container);
+                Container parentContainer = FindAncestorDataItem<Container>(this, ContextType.Container);
 
                 DataSource = dataSource.Where(it => it.ParentContainer == parentContainer);
             }
@@ -317,7 +295,8 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            DataSource = FindDataSource("ContainerInstances");
+            Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
+            DataSource = subject != null ? DataBinder.GetPropertyValue(subject, "ContainerInstances") : null;
 
             FilterDataSource();
 
@@ -329,8 +308,8 @@ namespace NeoEAV.Web.UI
             IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
             if (dataSource != null)
             {
-                Container container = this.FindParentDataItem<Container>(ContextType.Container);
-                ContainerInstance parentInstance = this.FindParentDataItem<ContainerInstance>(ContextType.Instance);
+                Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
+                ContainerInstance parentInstance = FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
 
                 DataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
             }
@@ -353,7 +332,8 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            DataSource = FindDataSource("Attributes");
+            Container project = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
+            DataSource = project != null ? DataBinder.GetPropertyValue(project, "Attributes") : null;
 
             base.OnDataBinding(e);
         }
@@ -367,10 +347,10 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                ContainerInstance instance = this.FindParentDataItem<ContainerInstance>(ContextType.Instance);
+                ContainerInstance instance = EAVContextControl.FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
                 if (instance != null)
                 {
-                    Attribute attribute = this.FindParentDataItem<Attribute>(ContextType.Attribute);
+                    Attribute attribute = EAVContextControl.FindAncestorDataItem<Attribute>(this, ContextType.Attribute);
 
                     return (instance.Values.SingleOrDefault(it => it.Attribute == attribute));
                 }
@@ -430,7 +410,8 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            DataSource = this.FindDataSource(ContextType.Subject, "ContainerInstances");
+            Subject subject = EAVContextControl.FindAncestorDataItem<Subject>(this, ContextType.Subject);
+            DataSource = subject != null ? DataBinder.GetPropertyValue(subject, "ContainerInstances") : null;
 
             FilterDataSource();
 
@@ -442,42 +423,11 @@ namespace NeoEAV.Web.UI
             IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
             if (dataSource != null)
             {
-                Container container = this.FindParentDataItem<Container>(ContextType.Container);
-                ContainerInstance parentInstance = this.FindParentDataItem<ContainerInstance>(ContextType.Instance);
+                Container container = EAVContextControl.FindAncestorDataItem<Container>(this, ContextType.Container);
+                ContainerInstance parentInstance = EAVContextControl.FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
 
                 DataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
             }
-        }
-    }
-
-    public static class EAVControlExtensions
-    {
-        public static object FindParentDataItem(this Control control, ContextType contextType)
-        {
-            Control container = control != null ? control.Parent : null;
-            while (container != null)
-            {
-                if (container is IDataItemContainer && container is IEAVContextControl && ((IEAVContextControl)container).ContextType == contextType)
-                {
-                    return (((IDataItemContainer)container).DataItem);
-                }
-
-                container = container.Parent;
-            }
-
-            return (null);
-        }
-
-        public static T FindParentDataItem<T>(this Control control, ContextType contextType) where T : class
-        {
-            return(control.FindParentDataItem(contextType) as T);
-        }
-
-        public static object FindDataSource(this Control control, ContextType parentContextType, string sourceName)
-        {
-            object dataItem = control.FindParentDataItem(parentContextType);
-
-            return(dataItem != null ? DataBinder.GetPropertyValue(dataItem, sourceName) : null);
         }
     }
 }
