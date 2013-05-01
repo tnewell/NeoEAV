@@ -237,7 +237,7 @@ namespace NeoEAV.Web.UI
         protected override void OnDataBinding(EventArgs e)
         {
             Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
-            DataSource = project != null ? DataBinder.GetPropertyValue(project, "Subjects") : null;
+            DataSource = project != null ? project.Subjects : null;
 
             base.OnDataBinding(e);
         }
@@ -260,7 +260,7 @@ namespace NeoEAV.Web.UI
         protected override void OnDataBinding(EventArgs e)
         {
             Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
-            DataSource = project != null ? DataBinder.GetPropertyValue(project, "Containers") : null;
+            DataSource = project != null ? project.Containers : null;
 
             FilterDataSource();
 
@@ -296,7 +296,7 @@ namespace NeoEAV.Web.UI
         protected override void OnDataBinding(EventArgs e)
         {
             Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
-            DataSource = subject != null ? DataBinder.GetPropertyValue(subject, "ContainerInstances") : null;
+            DataSource = subject != null ? subject.ContainerInstances : null;
 
             FilterDataSource();
 
@@ -332,46 +332,28 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            Container project = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
-            DataSource = project != null ? DataBinder.GetPropertyValue(project, "Attributes") : null;
+            Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
+            DataSource = container != null ? container.Attributes : null;
 
             base.OnDataBinding(e);
         }
     }
 
-    public partial class EAVTextBox : TextBox, IEAVDataControl, IDataItemContainer
+    public partial class EAVTextBox : TextBox, IEAVDataControl
     {
         public string RawValue { get { return (Text); } set { Text = value; } }
 
-        public object DataItem
-        {
-            get
-            {
-                ContainerInstance instance = EAVContextControl.FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
-                if (instance != null)
-                {
-                    Attribute attribute = EAVContextControl.FindAncestorDataItem<Attribute>(this, ContextType.Attribute);
-
-                    return (instance.Values.SingleOrDefault(it => it.Attribute == attribute));
-                }
-
-                return (null);
-            }
-        }
-
-        public int DataItemIndex
-        {
-            get { return (0); }
-        }
-
-        public int DisplayIndex
-        {
-            get { return (0); }
-        }
-
         protected override void OnDataBinding(EventArgs e)
         {
-            Value value = DataItem as Value;
+            Value value = null;
+
+            ContainerInstance instance = EAVContextControl.FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
+            if (instance != null)
+            {
+                Attribute attribute = EAVContextControl.FindAncestorDataItem<Attribute>(this, ContextType.Attribute);
+
+                value = instance.Values.SingleOrDefault(it => it.Attribute == attribute);
+            }
 
             RawValue = value != null ? value.RawValue : null;
 
@@ -379,13 +361,13 @@ namespace NeoEAV.Web.UI
         }
     }
 
-    public partial class EAVInstanceContextRepeaterItem : RepeaterItem, IEAVContextControl
+    public partial class EAVContextRepeaterItem : RepeaterItem, IEAVContextControl
     {
         public string ContextSelector { get { return (ViewState["ContextSelector"] as string); } set { ViewState["ContextSelector"] = value; } }
 
         public ContextType ContextType { get { return ((ContextType)(ViewState["ContextType"] ?? ContextType.Unknown)); } set { ViewState["ContextType"] = value; } }
 
-        public EAVInstanceContextRepeaterItem(int itemIndex, ListItemType itemType, ContextType contextType) : base(itemIndex, itemType) { ContextType = contextType; }
+        public EAVContextRepeaterItem(int itemIndex, ListItemType itemType, ContextType contextType) : base(itemIndex, itemType) { ContextType = contextType; }
 
         protected override void OnDataBinding(EventArgs e)
         {
@@ -403,7 +385,7 @@ namespace NeoEAV.Web.UI
         protected override RepeaterItem CreateItem(int itemIndex, ListItemType itemType)
         {
             if (itemType == ListItemType.AlternatingItem || itemType == ListItemType.EditItem || itemType == ListItemType.Item || itemType == ListItemType.SelectedItem)
-                return (new EAVInstanceContextRepeaterItem(itemIndex, itemType, ContextType.Instance));
+                return (new EAVContextRepeaterItem(itemIndex, itemType, ContextType.Instance));
             else
                 return base.CreateItem(itemIndex, itemType);
         }
@@ -411,7 +393,7 @@ namespace NeoEAV.Web.UI
         protected override void OnDataBinding(EventArgs e)
         {
             Subject subject = EAVContextControl.FindAncestorDataItem<Subject>(this, ContextType.Subject);
-            DataSource = subject != null ? DataBinder.GetPropertyValue(subject, "ContainerInstances") : null;
+            DataSource = subject != null ? subject.ContainerInstances : null;
 
             FilterDataSource();
 
