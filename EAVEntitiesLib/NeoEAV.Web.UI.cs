@@ -56,29 +56,19 @@ namespace NeoEAV.Web.UI
             return (controls);
         }
 
-        private Subject FindSubject(Project project, string memberID, bool createIfMissing)
-        {
-            Subject subject = project != null ? project.Subjects.SingleOrDefault(it => it.MemberID == memberID) : null;
-
-            if (subject == null && project != null && !String.IsNullOrEmpty(memberID) && createIfMissing)
-            {
-                throw (new ApplicationException(String.Format("Attempt to create new Subject when Member ID not found disallowed. Member ID = '{0}'.", memberID)));
-            }
-
-            return (subject);
-        }
-
         private ContainerInstance FindContainerInstance(Container container, Subject subject, ContainerInstance parentInstance, string repeatInstance, bool createIfMissing)
         {
-            ContainerInstance instance = container != null ? container.ContainerInstances.SingleOrDefault(it => it.Subject == subject && it.ParentContainerInstance == parentInstance && it.RepeatInstance.ToString() == repeatInstance) : null;
+            ContainerInstance instance = subject != null ? subject.ContainerInstances.SingleOrDefault(it => it.Container == container && it.ParentContainerInstance == parentInstance && it.RepeatInstance.ToString() == repeatInstance) : null;
             bool parentInstanceCorrect = container == null || (container.ParentContainer != null ^ parentInstance == null);
 
             if (instance == null && container != null && subject != null && parentInstanceCorrect && createIfMissing)
             {
                 if (String.IsNullOrWhiteSpace(repeatInstance))
                 {
-                    instance = new ContainerInstance() { Subject = subject, ParentContainerInstance = parentInstance };
-                    container.ContainerInstances.Add(instance);
+                    int newRepeatInstance = subject.ContainerInstances.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance).Max(it => it.RepeatInstance) + 1;
+
+                    instance = new ContainerInstance() { Subject = subject, Container = container, ParentContainerInstance = parentInstance, RepeatInstance = newRepeatInstance };
+                    //container.ContainerInstances.Add(instance);
                 }
                 else
                 {
@@ -91,74 +81,313 @@ namespace NeoEAV.Web.UI
 
         private Value FindValue(Attribute attribute, ContainerInstance instance, bool createIfMissing)
         {
-            Value value = attribute != null ? attribute.Values.SingleOrDefault(it => it.ContainerInstance == instance) : null;
+            Value value = instance != null ? instance.Values.SingleOrDefault(it => it.Attribute == attribute) : null;
 
             if (value == null && attribute != null && instance != null && createIfMissing)
             {
-                value = new Value() { ContainerInstance = instance };
-                attribute.Values.Add(value);
+                value = new Value() { ContainerInstance = instance, Attribute = attribute };
+                //attribute.Values.Add(value);
             }
 
             return (value);
         }
 
-        public void Bind(Control contextControl, bool bindToSource = false)
+        private void SaveAttribute(Container container, ContainerInstance instance, IGrouping<string, string[]> attributeGroup)
         {
-            // Need to finesse this so that we don't keep looking up stuff
-            // we don't need to. Order by context maybe.
-            foreach (IEAVDataControl control in FindEAVValueControls(contextControl))
+            Debug.WriteLine(String.Format("Attribute = '{0}'.", attributeGroup.Key));
+            Debug.Indent();
+
+            Attribute attribute = container.Attributes.SingleOrDefault(it => it.Name == attributeGroup.Key);
+            Value value = FindValue(attribute, instance, false);
+            string rawValue = attributeGroup.First().Last();
+
+            Debug.WriteLine(String.Format("Value = '{0}'.", rawValue));
+
+            if (value != null)
             {
-                string[] contextValues = BuildContextValue(control as Control).Split('|');
-                if (contextValues.Length >= 5)
-                {
-                    string strProject = contextValues[0];
-                    string strSubject = contextValues[1];
-                    string strAttribute = contextValues[contextValues.Length - 1];
-
-                    Project project = context.Projects.Single(it => it.Name == strProject);
-                    Subject subject = FindSubject(project, strSubject, bindToSource);
-
-                    Container container = project.Containers.Single(it => it.Name == contextValues[2]);
-                    ContainerInstance instance = FindContainerInstance(container, subject, null, contextValues[3], bindToSource);
-
-                    for (int index = 4; index < (contextValues.Length - 2) && container != null; index += 2)
-                    {
-                        container = container.ChildContainers.Single(it => it.Name == contextValues[index]);
-
-                        if (instance != null)
-                            instance = FindContainerInstance(container, subject, instance, contextValues[index + 1], bindToSource);
-                    }
-
-                    Attribute attribute = container.Attributes.Single(it => it.Name == strAttribute);
-                    Value value = FindValue(attribute, instance, false);
-
-                    if (bindToSource)
-                    {
-                        if (value != null)
-                        {
-                            if (String.IsNullOrWhiteSpace(control.RawValue))
-                                context.Values.Remove(value);
-                            else
-                                value.RawValue = control.RawValue;
-                        }
-                        else if (!String.IsNullOrWhiteSpace(control.RawValue))
-                        {
-                            value = FindValue(attribute, instance, true);
-                            value.RawValue = control.RawValue;
-                        }
-                    }
-                    else
-                    {
-                        control.RawValue = (value == null ? null : value.RawValue);
-                    }
-                }
+                if (String.IsNullOrWhiteSpace(rawValue))
+                    context.Values.Remove(value);
+                else
+                    value.RawValue = rawValue;
+            }
+            else if (!String.IsNullOrWhiteSpace(rawValue))
+            {
+                value = FindValue(attribute, instance, true);
+                value.RawValue = rawValue;
             }
 
-            // TODO: Need to prune empty bits out before saving
-
-            if (bindToSource)
-                context.SaveChanges();
+            Debug.Unindent();
         }
+
+        private void SaveInstance(Project project, Subject subject, Container container, ContainerInstance parentInstance, IGrouping<string, string[]> instanceGroup, int keyIndex)
+        {
+            Debug.WriteLine(String.Format("Instance = '{0}'.", instanceGroup.Key));
+            Debug.Indent();
+
+            ContainerInstance instance = FindContainerInstance(container, subject, parentInstance, instanceGroup.Key, true);
+
+            foreach (var attributeGroup in instanceGroup.GroupBy(it => it[keyIndex + 1]).Where(it => it.Count() - keyIndex <= 3))
+            {
+                SaveAttribute(container, instance, attributeGroup);
+            }
+
+            foreach (var containerGroup in instanceGroup.GroupBy(it => it[keyIndex + 1]).Where(it => it.Count() - keyIndex > 3))
+            {
+                SaveContainer(project, subject, container, instance, containerGroup, keyIndex + 1);
+            }
+
+            if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
+            {
+                context.ContainerInstances.Remove(instance);
+            }
+
+            Debug.Unindent();
+        }
+
+        private void SaveContainer(Project project, Subject subject, Container parentContainer, ContainerInstance parentInstance, IGrouping<string, string[]> containerGroup, int keyIndex)
+        {
+            Debug.WriteLine(String.Format("Container = '{0}'.", containerGroup.Key));
+            Debug.Indent();
+
+            Container container = project.Containers.SingleOrDefault(it => it.Name == containerGroup.Key && it.ParentContainer == parentContainer);
+            if (container != null)
+            {
+                foreach (var instanceGroup in containerGroup.GroupBy(it => it[keyIndex + 1]))
+                {
+                    SaveInstance(project, subject, container, parentInstance, instanceGroup, keyIndex + 1);
+                }
+            }
+            else
+            {
+                // ERROR: Container not found
+            }
+
+            Debug.Unindent();
+        }
+
+        private void SaveSubject(Project project, IGrouping<string, string[]> subjectGroup)
+        {
+            Debug.WriteLine(String.Format("Subject = '{0}'.", subjectGroup.Key));
+            Debug.Indent();
+
+            Subject subject = project.Subjects.SingleOrDefault(it => it.MemberID == subjectGroup.Key);
+            if (subject != null)
+            {
+                foreach (var containerGroup in subjectGroup.GroupBy(it => it[2]))
+                {
+                    SaveContainer(project, subject, null, null, containerGroup, 2);
+                }
+            }
+            else
+            {
+                // ERROR: Subject not found
+            }
+
+            Debug.Unindent();
+        }
+
+        private void SaveProject(IGrouping<string, string[]> projectGroup)
+        {
+            Debug.WriteLine(String.Format("Project = '{0}'.", projectGroup.Key));
+            Debug.Indent();
+
+            Project project = context.Projects.Single(it => it.Name == projectGroup.Key);
+            if (project != null)
+            {
+                foreach (var subjectGroup in projectGroup.GroupBy(it => it[1]))
+                {
+                    SaveSubject(project, subjectGroup);
+                }
+            }
+            else
+            {
+                // ERROR: Project not found
+            }
+
+            Debug.Unindent();
+        }
+
+        public void Save(Control contextControl)
+        {
+            BuildContextSet(contextControl);
+
+            Debug.WriteLine("Saving...");
+            Debug.Indent();
+
+            // Concatenate each data control's context with its value
+            var controlData = FindEAVValueControls(contextControl).Select(it => String.Concat(BuildContextValue(it as Control), "|", it.RawValue).Split('|'));
+
+            Debug.WriteLine(String.Format("{0} controls.", controlData.Count()));
+
+            // For each control group with a common project...
+            foreach (var projectGroup in controlData.GroupBy(it => it[0]))
+            {
+                SaveProject(projectGroup);
+            }
+
+            //context.SaveChanges();
+
+            Debug.Unindent();
+        }
+
+        //public void Bind(Control contextControl, bool bindToSource = false)
+        //{
+        //    // Need to finesse this so that we don't keep looking up stuff
+        //    // we don't need to. Order by context maybe.
+        //    foreach (IEAVDataControl control in FindEAVValueControls(contextControl))
+        //    {
+        //        string[] contextValues = BuildContextValue(control as Control).Split('|');
+        //        if (contextValues.Length >= 5)
+        //        {
+        //            string strProject = contextValues[0];
+        //            string strSubject = contextValues[1];
+        //            string strAttribute = contextValues[contextValues.Length - 1];
+
+        //            Project project = context.Projects.Single(it => it.Name == strProject);
+        //            Subject subject = project.Subjects.Single(it => it.MemberID == strSubject);
+
+        //            Container container = project.Containers.Single(it => it.Name == contextValues[2]);
+        //            ContainerInstance instance = FindContainerInstance(container, subject, null, contextValues[3], bindToSource);
+
+        //            for (int index = 4; index < (contextValues.Length - 2) && container != null; index += 2)
+        //            {
+        //                container = container.ChildContainers.Single(it => it.Name == contextValues[index]);
+
+        //                if (instance != null)
+        //                    instance = FindContainerInstance(container, subject, instance, contextValues[index + 1], bindToSource);
+        //            }
+
+        //            Attribute attribute = container.Attributes.Single(it => it.Name == strAttribute);
+        //            Value value = FindValue(attribute, instance, false);
+
+        //            if (bindToSource)
+        //            {
+        //                if (value != null)
+        //                {
+        //                    if (String.IsNullOrWhiteSpace(control.RawValue))
+        //                        context.Values.Remove(value);
+        //                    else
+        //                        value.RawValue = control.RawValue;
+        //                }
+        //                else if (!String.IsNullOrWhiteSpace(control.RawValue))
+        //                {
+        //                    value = FindValue(attribute, instance, true);
+        //                    value.RawValue = control.RawValue;
+        //                }
+        //            }
+        //            else
+        //            {
+        //                control.RawValue = (value == null ? null : value.RawValue);
+        //            }
+        //        }
+        //    }
+
+        //    // TODO: Need to prune empty bits out before saving
+
+        //    if (bindToSource)
+        //        context.SaveChanges();
+        //}
+
+        public void FillContextSet(ContextControlSet contextSet, Control container, ContextType contextType)
+        {
+            if (container is IEAVDataControl && contextType == ContextType.Value)
+            {
+                Debug.WriteLine(String.Format("Found Value '{0}'", ((IEAVDataControl) container).RawValue));
+                contextSet.Value = container as IEAVDataControl;
+
+                // TODO: Save data here
+            }
+            else if (container is IEAVContextControl && ((IEAVContextControl) container).ContextType == contextType)
+            {
+                switch (contextType)
+                {
+                    case ContextType.Project:
+                        Debug.WriteLine(String.Format("Found Project '{0}'", ((IEAVContextControl) container).ContextSelector));
+                        Debug.Indent();
+                        contextSet.Project = container as IEAVContextControl;
+                        foreach (Control child in container.Controls)
+                        {
+                            FillContextSet(contextSet, child, ContextType.Subject);
+                        }
+                        contextSet.Project = null;
+                        Debug.Unindent();
+                        break;
+                    case ContextType.Subject:
+                        Debug.WriteLine(String.Format("Found Subject '{0}'", ((IEAVContextControl) container).ContextSelector));
+                        Debug.Indent();
+                        contextSet.Subject = container as IEAVContextControl;
+                        foreach (Control child in container.Controls)
+                        {
+                            FillContextSet(contextSet, child, ContextType.Container);
+                        }
+                        contextSet.Subject = null;
+                        Debug.Unindent();
+                        break;
+                    case ContextType.Container:
+                        Debug.WriteLine(String.Format("Found Container '{0}'", ((IEAVContextControl) container).ContextSelector));
+                        Debug.Indent();
+                        contextSet.Container = container as IEAVContextControl;
+                        foreach (Control child in container.Controls)
+                        {
+                            FillContextSet(contextSet, child, ContextType.Instance);
+                        }
+                        contextSet.Container = null;
+                        Debug.Unindent();
+                        break;
+                    case ContextType.Instance:
+                        Debug.WriteLine(String.Format("Found Instance '{0}'", ((IEAVContextControl) container).ContextSelector));
+                        Debug.Indent();
+                        contextSet.Instance = container as IEAVContextControl;
+                        foreach (Control child in container.Controls)
+                        {
+                            FillContextSet(contextSet, child, ContextType.Attribute);
+                        }
+                        Debug.WriteLine(null);
+                        foreach (Control child in container.Controls)
+                        {
+                            FillContextSet(contextSet, child, ContextType.Container);
+                        }
+                        contextSet.Instance = null;
+                        Debug.Unindent();
+                        break;
+                    case ContextType.Attribute:
+                        Debug.WriteLine(String.Format("Found Attribute '{0}'", ((IEAVContextControl) container).ContextSelector));
+                        Debug.Indent();
+                        contextSet.Attribute = container as IEAVContextControl;
+                        foreach (Control child in container.Controls)
+                        {
+                            FillContextSet(contextSet, child, ContextType.Value);
+                        }
+                        contextSet.Attribute = null;
+                        Debug.Unindent();
+                        break;
+                }
+            }
+            else if (!(container is IEAVContextControl) && !(container is IEAVDataControl))
+            {
+                foreach (Control child in container.Controls)
+                {
+                    FillContextSet(contextSet, child, contextType);
+                }
+            }
+        }
+
+        public void BuildContextSet(Control container)
+        {
+            ContextControlSet set = new ContextControlSet();
+
+            FillContextSet(set, container, ContextType.Project);
+        }
+    }
+
+    public partial class ContextControlSet
+    {
+        public IEAVContextControl Project { get; set; }
+        public IEAVContextControl Subject { get; set; }
+        public IEAVContextControl Container { get; set; }
+        public IEAVContextControl Instance { get; set; }
+        public IEAVContextControl Attribute { get; set; }
+        public IEAVDataControl Value{ get; set; }
     }
 
     public enum ContextType { Unknown = 0, Project = 1, Subject = 2, Container = 3, Instance = 4, Attribute = 5, Value = 6 }

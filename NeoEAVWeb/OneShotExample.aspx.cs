@@ -92,7 +92,7 @@ namespace NeoEAVWeb
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            myContextController.Bind(this, true);
+            myContextController.Save(this);
         }
     }
 }
