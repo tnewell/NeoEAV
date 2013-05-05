@@ -61,9 +61,9 @@ namespace NeoEAVWeb
                 ctlSubjects.DataBind();
             }
 
-            if (!String.IsNullOrWhiteSpace(ctlSubjectContext.ContextSelector))
+            if (!String.IsNullOrWhiteSpace(ctlSubjectContext.ContextKey))
             {
-                ctlSubjectContext.ContextSelector = null;
+                ctlSubjectContext.ContextKey = null;
                 ctlSubjectContext.DataBind();
             }
 
@@ -86,9 +86,9 @@ namespace NeoEAVWeb
                 ctlInstances.DataBind();
             }
 
-            if (!String.IsNullOrWhiteSpace(ctlInstanceContext.ContextSelector))
+            if (!String.IsNullOrWhiteSpace(ctlInstanceContext.ContextKey))
             {
-                ctlInstanceContext.ContextSelector = null;
+                ctlInstanceContext.ContextKey = null;
                 ctlInstanceContext.DataBind();
             }
         }
@@ -97,7 +97,7 @@ namespace NeoEAVWeb
         {
             Debug.WriteLine("ctlSubjects_SelectedIndexChanged");
 
-            ctlSubjectContext.ContextSelector = ctlSubjects.SelectedValue;
+            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
 
             ctlProjectContext.DataBind();
 
@@ -108,7 +108,7 @@ namespace NeoEAVWeb
         {
             Debug.WriteLine("ctlInstances_SelectedIndexChanged");
             
-            ctlInstanceContext.ContextSelector = ctlInstances.SelectedValue;
+            ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
             
             ctlProjectContext.DataBind();
         }

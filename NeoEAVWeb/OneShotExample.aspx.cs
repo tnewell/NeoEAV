@@ -41,7 +41,7 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
-            ctlSubjectContext.ContextSelector = null;
+            ctlSubjectContext.ContextKey = null;
 
             Project project = ctlProjectContext.DataItem as Project;
             if (project != null)
@@ -59,7 +59,7 @@ namespace NeoEAVWeb
 
         private void BindInstances()
         {
-            ctlInstanceContext.ContextSelector = null;
+            ctlInstanceContext.ContextKey = null;
 
             Subject subject = ctlSubjectContext.DataItem as Subject;
             if (subject != null)
@@ -76,7 +76,7 @@ namespace NeoEAVWeb
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ctlSubjectContext.ContextSelector = ctlSubjects.SelectedValue;
+            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
 
             ctlProjectContext.DataBind();
 
@@ -85,7 +85,7 @@ namespace NeoEAVWeb
 
         protected void ctlInstances_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ctlInstanceContext.ContextSelector = ctlInstances.SelectedValue;
+            ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
 
             ctlProjectContext.DataBind();
         }

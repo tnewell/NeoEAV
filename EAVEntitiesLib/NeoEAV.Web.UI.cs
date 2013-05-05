@@ -57,32 +57,13 @@ namespace NeoEAV.Web.UI
 
         private void FillContextSet(ContextControlSet contextSet, Control container, ContextType contextType, Container parentContainer, ContainerInstance parentInstance)
         {
-            if (container is IEAVDataControl && contextType == ContextType.Value)
-            {
-                contextSet.ValueControl = container as IEAVDataControl;
-                contextSet.Value = FindValue(contextSet.Attribute, contextSet.Instance, false);
-                if (contextSet.Value != null)
-                {
-                    if (String.IsNullOrWhiteSpace(contextSet.ValueControl.RawValue))
-                        context.Values.Remove(contextSet.Value);
-                    else if (contextSet.Value.RawValue != contextSet.ValueControl.RawValue)
-                        contextSet.Value.RawValue = contextSet.ValueControl.RawValue;
-                }
-                else if (!String.IsNullOrWhiteSpace(contextSet.ValueControl.RawValue))
-                {
-                    contextSet.Value = FindValue(contextSet.Attribute, contextSet.Instance, true);
-                    contextSet.Value.RawValue = contextSet.ValueControl.RawValue;
-                }
-                contextSet.Value = null;
-                contextSet.ValueControl = null;
-            }
-            else if (container is IEAVContextControl && ((IEAVContextControl) container).ContextType == contextType)
+            if (container is IEAVContextControl && ((IEAVContextControl) container).ContextType == contextType)
             {
                 switch (contextType)
                 {
                     case ContextType.Project:
                         contextSet.ProjectControl = container as IEAVContextControl;
-                        contextSet.Project = context.Projects.SingleOrDefault(it => it.Name == contextSet.ProjectControl.ContextSelector);
+                        contextSet.Project = context.Projects.SingleOrDefault(it => it.Name == contextSet.ProjectControl.ContextKey);
                         foreach (Control child in container.Controls)
                         {
                             FillContextSet(contextSet, child, ContextType.Subject, parentContainer, parentInstance);
@@ -92,27 +73,32 @@ namespace NeoEAV.Web.UI
                         break;
                     case ContextType.Subject:
                         contextSet.SubjectControl = container as IEAVContextControl;
-                        contextSet.Subject = contextSet.Project.Subjects.SingleOrDefault(it => it.MemberID == contextSet.SubjectControl.ContextSelector);
+                        contextSet.Subject = contextSet.Project.Subjects.SingleOrDefault(it => it.MemberID == contextSet.SubjectControl.ContextKey);
+                        
                         foreach (Control child in container.Controls)
                         {
                             FillContextSet(contextSet, child, ContextType.Container, parentContainer, parentInstance);
                         }
+                        
                         contextSet.Subject = null;
                         contextSet.SubjectControl = null;
                         break;
                     case ContextType.Container:
                         contextSet.ContainerControl = container as IEAVContextControl;
-                        contextSet.Container = contextSet.Project.Containers.SingleOrDefault(it => it.ParentContainer == parentContainer && it.Name == contextSet.ContainerControl.ContextSelector);
+                        contextSet.Container = contextSet.Project.Containers.SingleOrDefault(it => it.ParentContainer == parentContainer && it.Name == contextSet.ContainerControl.ContextKey);
+                        
                         foreach (Control child in container.Controls)
                         {
                             FillContextSet(contextSet, child, ContextType.Instance, parentContainer, parentInstance);
                         }
+                        
                         contextSet.Container = null;
                         contextSet.ContainerControl = null;
                         break;
                     case ContextType.Instance:
                         contextSet.InstanceControl = container as IEAVContextControl;
-                        contextSet.Instance = FindContainerInstance(contextSet.Subject, contextSet.Container, parentInstance, contextSet.InstanceControl.ContextSelector, true);
+                        contextSet.Instance = FindContainerInstance(contextSet.Subject, contextSet.Container, parentInstance, contextSet.InstanceControl.ContextKey, true);
+
                         foreach (Control child in container.Controls)
                         {
                             FillContextSet(contextSet, child, ContextType.Attribute, parentContainer, parentInstance);
@@ -121,25 +107,49 @@ namespace NeoEAV.Web.UI
                         {
                             FillContextSet(contextSet, child, ContextType.Container, contextSet.Container, contextSet.Instance);
                         }
+
+                        if (!contextSet.Instance.Values.Any() && !contextSet.Instance.ChildContainerInstances.Any())
+                            context.ContainerInstances.Remove(contextSet.Instance);
+
                         contextSet.Instance = null;
                         contextSet.InstanceControl = null;
                         break;
                     case ContextType.Attribute:
                         contextSet.AttributeControl = container as IEAVContextControl;
-                        contextSet.Attribute = contextSet.Container.Attributes.SingleOrDefault(it => it.Name == contextSet.AttributeControl.ContextSelector);
+                        contextSet.Attribute = contextSet.Container.Attributes.SingleOrDefault(it => it.Name == contextSet.AttributeControl.ContextKey);
+                        
                         foreach (Control child in container.Controls)
                         {
                             FillContextSet(contextSet, child, ContextType.Value, parentContainer, parentInstance);
                         }
+                        
                         contextSet.Attribute = null;
                         contextSet.AttributeControl = null;
                         break;
+                    case ContextType.Value:
+                        contextSet.ValueControl = container as IEAVContextControl;
+                        contextSet.Value = FindValue(contextSet.Attribute, contextSet.Instance, false);
+                        
+                        if (contextSet.Value != null)
+                        {
+                            if (String.IsNullOrWhiteSpace(contextSet.ValueControl.ContextKey))
+                                context.Values.Remove(contextSet.Value);
+                            else if (contextSet.Value.RawValue != contextSet.ValueControl.ContextKey)
+                                contextSet.Value.RawValue = contextSet.ValueControl.ContextKey;
+                        }
+                        else if (!String.IsNullOrWhiteSpace(contextSet.ValueControl.ContextKey))
+                        {
+                            contextSet.Value = FindValue(contextSet.Attribute, contextSet.Instance, true);
+                            contextSet.Value.RawValue = contextSet.ValueControl.ContextKey;
+                        }
+                        
+                        contextSet.Value = null;
+                        contextSet.ValueControl = null;
+                        break;
                 }
             }
-            else if (!(container is IEAVContextControl) && !(container is IEAVDataControl))
+            else
             {
-                // If we don't find what we're looking for on this level
-                // keep going with the child controls
                 foreach (Control child in container.Controls)
                 {
                     FillContextSet(contextSet, child, contextType, parentContainer, parentInstance);
@@ -175,7 +185,7 @@ namespace NeoEAV.Web.UI
         public IEAVContextControl AttributeControl { get; set; }
 
         public Value Value { get; set; }
-        public IEAVDataControl ValueControl { get; set; }
+        public IEAVContextControl ValueControl { get; set; }
     }
 
     public enum ContextType { Unknown = 0, Project = 1, Subject = 2, Container = 3, Instance = 4, Attribute = 5, Value = 6 }
@@ -183,17 +193,12 @@ namespace NeoEAV.Web.UI
     public interface IEAVContextControl
     {
         ContextType ContextType { get; }
-        string ContextSelector { get; set; }
-    }
-
-    public interface IEAVDataControl
-    {
-        string RawValue { get; set; }
+        string ContextKey { get; set; }
     }
 
     public abstract class EAVContextControl : Control, IEAVContextControl, IDataItemContainer
     {
-        public virtual string ContextSelector { get { return (ViewState["ContextSelector"] as string); } set { ViewState["ContextSelector"] = value; DataSource = null; } }
+        public virtual string ContextKey { get { return (ViewState["ContextKey"] as string); } set { ViewState["ContextKey"] = value; DataSource = null; } }
 
         public abstract ContextType ContextType { get; }
 
@@ -232,7 +237,7 @@ namespace NeoEAV.Web.UI
             {
                 IEnumerable<Project> dataSource = DataSource as IEnumerable<Project>;
                 
-                return(dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextSelector) : null);
+                return(dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextKey) : null);
             }
         }
     }
@@ -247,7 +252,7 @@ namespace NeoEAV.Web.UI
             {
                 IEnumerable<Subject> dataSource = DataSource as IEnumerable<Subject>;
 
-                return (dataSource != null ? dataSource.SingleOrDefault(it => it.MemberID == ContextSelector) : null);
+                return (dataSource != null ? dataSource.SingleOrDefault(it => it.MemberID == ContextKey) : null);
             }
         }
 
@@ -270,7 +275,7 @@ namespace NeoEAV.Web.UI
             {
                 IEnumerable<Container> dataSource = DataSource as IEnumerable<Container>;
 
-                return (dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextSelector) : null);
+                return (dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextKey) : null);
             }
         }
 
@@ -306,7 +311,7 @@ namespace NeoEAV.Web.UI
             {
                 IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
 
-                return (dataSource != null ? dataSource.SingleOrDefault(it => it.RepeatInstance.ToString() == ContextSelector) : null);
+                return (dataSource != null ? dataSource.SingleOrDefault(it => it.RepeatInstance.ToString() == ContextKey) : null);
             }
         }
 
@@ -343,7 +348,7 @@ namespace NeoEAV.Web.UI
             {
                 IEnumerable<Attribute> dataSource = DataSource as IEnumerable<Attribute>;
 
-                return (dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextSelector) : null);
+                return (dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextKey) : null);
             }
         }
 
@@ -356,9 +361,11 @@ namespace NeoEAV.Web.UI
         }
     }
 
-    public partial class EAVTextBox : TextBox, IEAVDataControl
+    public partial class EAVTextBox : TextBox, IEAVContextControl
     {
-        public string RawValue { get { return (Text); } set { Text = value; } }
+        public string ContextKey { get { return (Text); } set { Text = value; } }
+
+        public ContextType ContextType { get { return (ContextType.Value); } }
 
         protected override void OnDataBinding(EventArgs e)
         {
@@ -372,7 +379,7 @@ namespace NeoEAV.Web.UI
                 value = instance.Values.SingleOrDefault(it => it.Attribute == attribute);
             }
 
-            RawValue = value != null ? value.RawValue : null;
+            ContextKey = value != null ? value.RawValue : null;
 
             base.OnDataBinding(e);
         }
@@ -380,7 +387,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVContextRepeaterItem : RepeaterItem, IEAVContextControl
     {
-        public string ContextSelector { get { return (ViewState["ContextSelector"] as string); } set { ViewState["ContextSelector"] = value; } }
+        public string ContextKey { get { return (ViewState["ContextKey"] as string); } set { ViewState["ContextKey"] = value; } }
 
         public ContextType ContextType { get { return ((ContextType)(ViewState["ContextType"] ?? ContextType.Unknown)); } set { ViewState["ContextType"] = value; } }
 
@@ -389,9 +396,9 @@ namespace NeoEAV.Web.UI
         protected override void OnDataBinding(EventArgs e)
         {
             if (DataItem != null)
-                ContextSelector = ((ContainerInstance)DataItem).RepeatInstance.ToString();
+                ContextKey = ((ContainerInstance)DataItem).RepeatInstance.ToString();
             else
-                ContextSelector = null;
+                ContextKey = null;
 
             base.OnDataBinding(e);
         }
@@ -425,7 +432,12 @@ namespace NeoEAV.Web.UI
                 Container container = EAVContextControl.FindAncestorDataItem<Container>(this, ContextType.Container);
                 ContainerInstance parentInstance = EAVContextControl.FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
 
-                DataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
+                dataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
+
+                if (!dataSource.Any() || container.IsRepeating)
+                    dataSource = dataSource.Concat(new ContainerInstance[] { null } );
+
+                DataSource = dataSource;
             }
         }
     }

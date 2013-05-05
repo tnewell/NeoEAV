@@ -51,16 +51,16 @@ namespace NeoEAVWeb
                 ctlSubjects.DataBind();
             }
 
-            if (!String.IsNullOrWhiteSpace(ctlSubjectContext.ContextSelector))
+            if (!String.IsNullOrWhiteSpace(ctlSubjectContext.ContextKey))
             {
-                ctlSubjectContext.ContextSelector = null;
+                ctlSubjectContext.ContextKey = null;
                 ctlSubjectContext.DataBind();
             }
         }
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ctlSubjectContext.ContextSelector = ctlSubjects.SelectedValue;
+            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
 
             ctlProjectContext.DataBind();
         }
