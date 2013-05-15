@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -64,10 +65,12 @@ namespace NeoEAV.Web.UI
                     case ContextType.Project:
                         contextSet.ProjectControl = container as IEAVContextControl;
                         contextSet.Project = context.Projects.SingleOrDefault(it => it.Name == contextSet.ProjectControl.ContextKey);
+
                         foreach (Control child in container.Controls)
                         {
                             FillContextSet(contextSet, child, ContextType.Subject, parentContainer, parentInstance);
                         }
+                        
                         contextSet.Project = null;
                         contextSet.ProjectControl = null;
                         break;
@@ -198,7 +201,23 @@ namespace NeoEAV.Web.UI
 
     public abstract class EAVContextControl : Control, IEAVContextControl, IDataItemContainer
     {
-        public virtual string ContextKey { get { return (ViewState["ContextKey"] as string); } set { ViewState["ContextKey"] = value; DataSource = null; } }
+        public static T FindAncestorDataItem<T>(Control control, ContextType ancestorContextType) where T : class
+        {
+            Control container = control != null ? control.Parent : null;
+            while (container != null)
+            {
+                if (container is IEAVContextControl && ((IEAVContextControl)container).ContextType == ancestorContextType)
+                {
+                    return (DataBinder.GetDataItem(container) as T);
+                }
+
+                container = container.Parent;
+            }
+
+            return (null);
+        }
+
+        public virtual string ContextKey { get { return (ViewState["ContextKey"] as string); } set { ViewState["ContextKey"] = value; } }
 
         public abstract ContextType ContextType { get; }
 
@@ -209,22 +228,6 @@ namespace NeoEAV.Web.UI
         public virtual int DisplayIndex { get { return (0); } }
 
         public virtual object DataSource { get; set; }
-
-        public static T FindAncestorDataItem<T>(Control control, ContextType ancestorContextType) where T : class
-        {
-            Control container = control != null ? control.Parent : null;
-            while (container != null)
-            {
-                if (container is IEAVContextControl && ((IEAVContextControl)container).ContextType == ancestorContextType)
-                {
-                    return(DataBinder.GetDataItem(container) as T);
-                }
-
-                container = container.Parent;
-            }
-
-            return (null);
-        }
     }
 
     public partial class EAVProjectContextControl : EAVContextControl
@@ -239,6 +242,17 @@ namespace NeoEAV.Web.UI
                 
                 return(dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextKey) : null);
             }
+        }
+
+        protected override void OnDataBinding(EventArgs e)
+        {
+            Debug.WriteLine(String.Format("Project::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Indent();
+
+            base.OnDataBinding(e);
+
+            Debug.WriteLine(String.Format("Project::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Unindent();
         }
     }
 
@@ -258,10 +272,16 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
+            Debug.WriteLine(String.Format("Subject::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Indent();
+
             Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
             DataSource = project != null ? project.Subjects : null;
 
             base.OnDataBinding(e);
+
+            Debug.WriteLine(String.Format("Subject::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Unindent();
         }
     }
 
@@ -281,15 +301,21 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
+            Debug.WriteLine(String.Format("Container::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Indent();
+
             Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
             DataSource = project != null ? project.Containers : null;
 
             FilterDataSource();
 
             base.OnDataBinding(e);
+
+            Debug.WriteLine(String.Format("Container::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Unindent();
         }
 
-        public void FilterDataSource()
+        private void FilterDataSource()
         {
             IEnumerable<Container> dataSource = DataSource as IEnumerable<Container>;
             if (dataSource != null)
@@ -317,15 +343,21 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
+            Debug.WriteLine(String.Format("Instance::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Indent();
+
             Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
             DataSource = subject != null ? subject.ContainerInstances : null;
 
             FilterDataSource();
 
             base.OnDataBinding(e);
+
+            Debug.WriteLine(String.Format("Instance::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Unindent();
         }
         
-        public void FilterDataSource()
+        private void FilterDataSource()
         {
             IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
             if (dataSource != null)
@@ -354,10 +386,16 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
+            Debug.WriteLine(String.Format("Attribute::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Indent();
+
             Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
             DataSource = container != null ? container.Attributes : null;
 
             base.OnDataBinding(e);
+
+            Debug.WriteLine(String.Format("Attribute::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+            Debug.Unindent();
         }
     }
 
@@ -385,13 +423,13 @@ namespace NeoEAV.Web.UI
         }
     }
 
-    public partial class EAVContextRepeaterItem : RepeaterItem, IEAVContextControl
+    public partial class EAVInstanceContextRepeaterItem : RepeaterItem, IEAVContextControl
     {
         public string ContextKey { get { return (ViewState["ContextKey"] as string); } set { ViewState["ContextKey"] = value; } }
 
-        public ContextType ContextType { get { return ((ContextType)(ViewState["ContextType"] ?? ContextType.Unknown)); } set { ViewState["ContextType"] = value; } }
+        public ContextType ContextType { get { return (ContextType.Instance); } }
 
-        public EAVContextRepeaterItem(int itemIndex, ListItemType itemType, ContextType contextType) : base(itemIndex, itemType) { ContextType = contextType; }
+        public EAVInstanceContextRepeaterItem(int itemIndex, ListItemType itemType) : base(itemIndex, itemType) { }
 
         protected override void OnDataBinding(EventArgs e)
         {
@@ -409,7 +447,7 @@ namespace NeoEAV.Web.UI
         protected override RepeaterItem CreateItem(int itemIndex, ListItemType itemType)
         {
             if (itemType == ListItemType.AlternatingItem || itemType == ListItemType.EditItem || itemType == ListItemType.Item || itemType == ListItemType.SelectedItem)
-                return (new EAVContextRepeaterItem(itemIndex, itemType, ContextType.Instance));
+                return (new EAVInstanceContextRepeaterItem(itemIndex, itemType));
             else
                 return base.CreateItem(itemIndex, itemType);
         }
@@ -424,7 +462,7 @@ namespace NeoEAV.Web.UI
             base.OnDataBinding(e);
         }
 
-        public void FilterDataSource()
+        private void FilterDataSource()
         {
             IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
             if (dataSource != null)
@@ -438,6 +476,166 @@ namespace NeoEAV.Web.UI
                     dataSource = dataSource.Concat(new ContainerInstance[] { null } );
 
                 DataSource = dataSource;
+            }
+        }
+    }
+
+    namespace AutoGen
+    {
+        public partial class EAVAutoContainerContextControl : EAVContainerContextControl
+        {
+            public override string ContextKey
+            {
+                get
+                {
+                    return base.ContextKey;
+                }
+                set
+                {
+                    base.ContextKey = value;
+                    ChildControlsCreated = false;
+                }
+            }
+
+            protected override void CreateChildControls()
+            {
+                Debug.WriteLine(String.Format("AutoContainer::CreateChildControls {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Indent();
+
+                if (!String.IsNullOrWhiteSpace(ContextKey))
+                {
+                    if (DataSource == null)
+                        DataBind();
+
+                    Container container = DataItem as Container;
+                    if (container != null)
+                    {
+                        if (container.IsRepeating)
+                        {
+                            Controls.Add(new EAVInstanceContextRepeater());
+                        }
+                        else
+                        {
+                            Controls.Add(new EAVAutoInstanceContextControl() { ContextKey = container.ContainerInstances.Select(it => it.RepeatInstance.ToString()).FirstOrDefault() });
+                        }
+                    }
+                }
+
+                Debug.WriteLine(String.Format("AutoContainer::CreateChildControls {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Unindent();
+            }
+
+            protected override void OnDataBinding(EventArgs e)
+            {
+                Debug.WriteLine(String.Format("AutoContainer::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Indent();
+
+                base.OnDataBinding(e);
+
+                Debug.WriteLine(String.Format("AutoContainer::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Unindent();
+            }
+        }
+
+        public partial class EAVAutoInstanceContextControl : EAVInstanceContextControl
+        {
+            public override string ContextKey
+            {
+                get
+                {
+                    return base.ContextKey;
+                }
+                set
+                {
+                    base.ContextKey = value;
+                    ChildControlsCreated = false;
+                }
+            }
+
+            protected override void CreateChildControls()
+            {
+                Debug.WriteLine(String.Format("AutoInstance::CreateChildControls {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Indent();
+
+                if (!String.IsNullOrWhiteSpace(ContextKey))
+                {
+                    if (DataSource == null)
+                        DataBind();
+
+                    Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
+                    if (container != null)
+                    {
+                        foreach (Attribute attribute in container.Attributes)
+                        {
+                            Controls.Add(new EAVAutoAttributeContextControl() { ContextKey = attribute.Name });
+                        }
+                    }
+                }
+
+                Debug.WriteLine(String.Format("AutoInstance::CreateChildControls {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Unindent();
+            }
+
+            protected override void OnDataBinding(EventArgs e)
+            {
+                Debug.WriteLine(String.Format("AutoInstance::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Indent();
+
+                base.OnDataBinding(e);
+
+                Debug.WriteLine(String.Format("AutoInstance::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Unindent();
+            }
+        }
+
+        public partial class EAVAutoAttributeContextControl : EAVAttributeContextControl
+        {
+            public override string ContextKey
+            {
+                get
+                {
+                    return base.ContextKey;
+                }
+                set
+                {
+                    base.ContextKey = value;
+                    ChildControlsCreated = false;
+                }
+            }
+            
+            protected override void CreateChildControls()
+            {
+                Debug.WriteLine(String.Format("AutoAttribute::CreateChildControls {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Indent();
+
+                if (!String.IsNullOrWhiteSpace(ContextKey))
+                {
+                    if (DataSource == null)
+                        DataBind();
+
+                    Attribute attribute = DataItem as Attribute;
+                    if (attribute != null)
+                    {
+                        Controls.Add(new Label() { Text = " [" + attribute.DisplayName + "] " });
+                        EAVTextBox ctl = new EAVTextBox();
+                        Controls.Add(ctl);
+                        ctl.DataBind();
+                    }
+                }
+
+                Debug.WriteLine(String.Format("AutoAttribute::CreateChildControls {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Unindent();
+            }
+
+            protected override void OnDataBinding(EventArgs e)
+            {
+                Debug.WriteLine(String.Format("AutoAttribute::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Indent();
+
+                base.OnDataBinding(e);
+
+                Debug.WriteLine(String.Format("AutoAttribute::OnDataBinding {{ DataSource = {0}, ContextKey = '{1}', DataItem = {2} }}", DataSource != null, ContextKey, DataItem != null));
+                Debug.Unindent();
             }
         }
     }

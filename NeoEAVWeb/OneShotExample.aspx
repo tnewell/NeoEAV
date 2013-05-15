@@ -1,5 +1,6 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="OneShotExample.aspx.cs" Inherits="NeoEAVWeb.OneShotExample" %>
 <%@ Register Assembly="EAVEntitiesLib" Namespace="NeoEAV.Web.UI" TagPrefix="eav" %>
+<%@ Register Assembly="EAVEntitiesLib" Namespace="NeoEAV.Web.UI.AutoGen" TagPrefix="auto" %>
 
 <!DOCTYPE html>
 
@@ -21,7 +22,7 @@
                     <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="">
                         <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                             Subject:
-                            <asp:Label runat="server" Text='<%# Eval("MemberID") %>'></asp:Label>
+                            <asp:Label runat="server" Text='<%# Eval("Container.MemberID") %>'></asp:Label>
                         </div>
                         <eav:EAVContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="Test Root Container 1">
                             <asp:Panel runat="server" GroupingText='<%# Eval("DisplayName") %>'>

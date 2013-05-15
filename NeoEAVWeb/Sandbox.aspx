@@ -13,11 +13,13 @@
             <asp:Button runat="server" ID="ctlGoButton" OnClick="ctlGoButton_Click" Text="Go" /> 
         </div>
         <div>
-            <a href="RunningExample.aspx">Running Form Example</a>
+            <a href="OneShotExample.aspx">One-Shot Form Example</a>
             <br />
             <a href="RecurringExample.aspx">Recurring Form Example</a>
             <br />
-            <a href="OneShotExample.aspx">One-Shot Form Example</a>
+            <a href="RunningExample.aspx">Running Form Example</a>
+            <br />
+            <a href="AutoGenExample.aspx">AutoGen Example</a>
         </div>
     </form>
 </body>
