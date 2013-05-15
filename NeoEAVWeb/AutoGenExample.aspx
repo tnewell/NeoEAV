@@ -18,14 +18,14 @@
             </p>
             <div style="padding-top: 35px;">
                 <eav:eavprojectcontextcontrol runat="server" id="ctlProjectContext" contextkey="Test Project 1">
-                <asp:Panel runat="server" GroupingText='<%# Eval("Description") %>'>
+                <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "Description") %>'>
                     <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="">
                         <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                             Subject:
-                            <asp:Label runat="server" Text='<%# Eval("Container.MemberID") %>'></asp:Label>
+                            <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "MemberID") %>'></asp:Label>
                         </div>
                         <hr />
-                        <auto:EAVAutoContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="Test Root Container 1" />
+                        <auto:EAVAutoContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="" />
                         <hr />
                     </eav:EAVSubjectContextControl>
                 </asp:Panel>

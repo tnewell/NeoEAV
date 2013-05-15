@@ -31,6 +31,13 @@ namespace NeoEAVWeb
             }
         }
 
+        protected override void OnPreRender(EventArgs e)
+        {
+            ctlProjectContext.DataBind();
+
+            base.OnPreRender(e);
+        }
+
         private void BindProjects()
         {
             ctlProjectContext.DataSource = myContextController.Projects;
@@ -65,11 +72,11 @@ namespace NeoEAVWeb
             if (subject != null)
             {
                 Container container = ctlContainerContext.DataItem as Container;
-                List<string> members = subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).ToList();
+                List<string> instances = subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).ToList();
 
-                members.Insert(0, String.Empty);
+                instances.Insert(0, String.Empty);
 
-                ctlInstances.DataSource = members;
+                ctlInstances.DataSource = instances;
                 ctlInstances.DataBind();
             }
         }
@@ -77,8 +84,7 @@ namespace NeoEAVWeb
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-
-            ctlProjectContext.DataBind();
+            ctlSubjectContext.DataBind();
 
             BindInstances();
         }
@@ -86,15 +92,12 @@ namespace NeoEAVWeb
         protected void ctlInstances_SelectedIndexChanged(object sender, EventArgs e)
         {
             ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
-
-            ctlProjectContext.DataBind();
+            ctlInstanceContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
             myContextController.Save(this);
-
-            ctlProjectContext.DataBind();
         }
     }
 }

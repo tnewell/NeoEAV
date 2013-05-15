@@ -30,6 +30,13 @@ namespace NeoEAVWeb
             }
         }
 
+        protected override void OnPreRender(EventArgs e)
+        {
+            ctlProjectContext.DataBind();
+
+            base.OnPreRender(e);
+        }
+
         private void BindProjects()
         {
             ctlProjectContext.DataSource = myContextController.Projects;
@@ -40,6 +47,8 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
+            ctlSubjectContext.ContextKey = null;
+
             Project project = ctlProjectContext.DataItem as Project;
             if (project != null)
             {
@@ -50,26 +59,17 @@ namespace NeoEAVWeb
                 ctlSubjects.DataSource = members;
                 ctlSubjects.DataBind();
             }
-
-            if (!String.IsNullOrWhiteSpace(ctlSubjectContext.ContextKey))
-            {
-                ctlSubjectContext.ContextKey = null;
-                ctlSubjectContext.DataBind();
-            }
         }
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-
-            ctlProjectContext.DataBind();
+            ctlSubjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
             myContextController.Save(this);
-
-            ctlProjectContext.DataBind();
         }
     }
 }

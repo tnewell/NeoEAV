@@ -36,6 +36,13 @@ namespace NeoEAVWeb
             }
         }
 
+        protected override void OnPreRender(EventArgs e)
+        {
+            ctlProjectContext.DataBind();
+
+            base.OnPreRender(e);
+        }
+
         private void BindProjects()
         {
             Debug.WriteLine("BindProjects");
@@ -49,7 +56,9 @@ namespace NeoEAVWeb
         private void BindSubjects()
         {
             Debug.WriteLine("BindSubjects");
-            
+
+            ctlSubjectContext.ContextKey = null;
+
             Project project = ctlProjectContext.DataItem as Project;
             if (project != null)
             {
@@ -61,18 +70,14 @@ namespace NeoEAVWeb
                 ctlSubjects.DataBind();
             }
 
-            if (!String.IsNullOrWhiteSpace(ctlSubjectContext.ContextKey))
-            {
-                ctlSubjectContext.ContextKey = null;
-                ctlSubjectContext.DataBind();
-            }
-
             BindInstances();
         }
 
         private void BindInstances()
         {
             Debug.WriteLine("BindInstances");
+
+            ctlInstanceContext.ContextKey = null;
 
             Subject subject = ctlSubjectContext.DataItem as Subject;
             if (subject != null)
@@ -85,12 +90,6 @@ namespace NeoEAVWeb
                 ctlInstances.DataSource = members;
                 ctlInstances.DataBind();
             }
-
-            if (!String.IsNullOrWhiteSpace(ctlInstanceContext.ContextKey))
-            {
-                ctlInstanceContext.ContextKey = null;
-                ctlInstanceContext.DataBind();
-            }
         }
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
@@ -98,8 +97,7 @@ namespace NeoEAVWeb
             Debug.WriteLine("ctlSubjects_SelectedIndexChanged");
 
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-
-            ctlProjectContext.DataBind();
+            ctlSubjectContext.DataBind();
 
             BindInstances();
         }
@@ -109,15 +107,12 @@ namespace NeoEAVWeb
             Debug.WriteLine("ctlInstances_SelectedIndexChanged");
             
             ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
-            
-            ctlProjectContext.DataBind();
+            ctlInstanceContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
             myContextController.Save(this);
-
-            ctlProjectContext.DataBind();
         }
     }
 }

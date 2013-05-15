@@ -62,6 +62,8 @@ namespace NeoEAVWeb
             Debug.WriteLine(String.Format("OnPreRender"));
             Debug.Indent();
 
+            ctlProjectContext.DataBind();
+
             base.OnPreRender(e);
 
             Debug.Unindent();
@@ -123,8 +125,7 @@ namespace NeoEAVWeb
             Debug.WriteLine(String.Format("ctlSubjects_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlSubjects.SelectedValue));
 
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-
-            ctlProjectContext.DataBind();
+            ctlSubjectContext.DataBind();
         }
 
         protected void ctlContainers_SelectedIndexChanged(object sender, EventArgs e)
@@ -132,15 +133,12 @@ namespace NeoEAVWeb
             Debug.WriteLine(String.Format("ctlContainers_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlContainers.SelectedValue));
 
             ctlContainerContext.ContextKey = ctlContainers.SelectedValue;
-
-            ctlProjectContext.DataBind();
+            ctlContainerContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            //myContextController.Save(this);
-
-            //ctlProjectContext.DataBind();
+            myContextController.Save(this);
         }
     }
 }

@@ -18,41 +18,41 @@
         </p>
         <div style="padding-top: 35px;">
             <eav:EAVProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 1">
-                <asp:Panel runat="server" GroupingText='<%# Eval("Description") %>'>
+                <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "Description") %>'>
                     <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="">
                         <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                             Subject:
-                            <asp:Label runat="server" Text='<%# Eval("Container.MemberID") %>'></asp:Label>
+                            <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "MemberID") %>'></asp:Label>
                         </div>
                         <eav:EAVContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="Test Root Container 1">
-                            <asp:Panel runat="server" GroupingText='<%# Eval("DisplayName") %>'>
+                            <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>'>
                                 <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" ContextKey="">
                                     <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                         Instance:
-                                        <asp:Label runat="server" Text='<%# Eval("RepeatInstance") %>'></asp:Label>
+                                        <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "RepeatInstance") %>'></asp:Label>
                                     </div>
                                     <eav:EAVAttributeContextControl runat="server" ContextKey="Test Attribute 1">
-                                        <asp:Label runat="server" Text='<%# Eval("DisplayName") %>' />
+                                        <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>' />
                                         <eav:EAVTextBox runat="server" ID="ctlAttribute1" Width="200"></eav:EAVTextBox>
                                     </eav:EAVAttributeContextControl>
                                     <br />
                                     <eav:EAVAttributeContextControl runat="server" ContextKey="Test Attribute 2">
-                                        <asp:Label runat="server" Text='<%# Eval("DisplayName") %>' />
+                                        <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>' />
                                         <eav:EAVTextBox runat="server" ID="ctlAttribute2" Width="200"></eav:EAVTextBox>
                                     </eav:EAVAttributeContextControl>
                                     <br />
                                     <eav:EAVAttributeContextControl runat="server" ContextKey="Test Attribute 3">
-                                        <asp:Label runat="server" Text='<%# Eval("DisplayName") %>' />
+                                        <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>' />
                                         <eav:EAVTextBox runat="server" ID="ctlAttribute3" Width="200"></eav:EAVTextBox>
                                     </eav:EAVAttributeContextControl>
                                     <br />
                                     <eav:EAVAttributeContextControl runat="server" ContextKey="Test Attribute 4">
-                                        <asp:Label runat="server" Text='<%# Eval("DisplayName") %>' />
+                                        <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>' />
                                         <eav:EAVTextBox runat="server" ID="ctlAttribute4" Width="200"></eav:EAVTextBox>
                                     </eav:EAVAttributeContextControl>
                                     <br />
                                     <eav:EAVAttributeContextControl runat="server" ContextKey="Test Attribute 5">
-                                        <asp:Label runat="server" Text='<%# Eval("DisplayName") %>' />
+                                        <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>' />
                                         <eav:EAVTextBox runat="server" ID="ctlAttribute5" Width="200"></eav:EAVTextBox>
                                     </eav:EAVAttributeContextControl>
                                 </eav:EAVInstanceContextControl>
