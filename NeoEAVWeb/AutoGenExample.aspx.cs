@@ -31,6 +31,10 @@ namespace NeoEAVWeb
         {
             Debug.WriteLine(String.Format("Page_Load"));
 
+            myContextController.ActiveProject = ctlProjectContext.ContextKey;
+            myContextController.ActiveSubject = ctlSubjectContext.ContextKey;
+            myContextController.ActiveContainer = ctlContainerContext.ContextKey;
+
             if (!IsPostBack)
             {
                 BindProjects();
@@ -90,50 +94,48 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
+            myContextController.ActiveSubject = null;
             ctlSubjectContext.ContextKey = null;
 
-            Project project = ctlProjectContext.DataItem as Project;
-            if (project != null)
-            {
-                List<string> members = project.Subjects.Select(it => it.MemberID).ToList();
+            List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
+            if (members.Any())
                 members.Insert(0, String.Empty);
 
-                ctlSubjects.DataSource = members;
-                ctlSubjects.DataBind();
-            }
+            ctlSubjects.DataSource = members;
+            ctlSubjects.DataBind();
+            ctlSubjects.Enabled = ctlSubjects.Items.Count > 0;
         }
 
         private void BindContainers()
         {
+            myContextController.ActiveContainer = null;
             ctlContainerContext.ContextKey = null;
 
-            Project project = ctlProjectContext.DataItem as Project;
-            if (project != null)
-            {
-                List<string> members = project.Containers.Where(it => it.ParentContainer == null).Select(it => it.Name).ToList();
+            List<string> members = myContextController.GetContainersForActiveProject().Select(it => it.Name).ToList();
 
+            if (members.Any())
                 members.Insert(0, String.Empty);
 
-                ctlContainers.DataSource = members;
-                ctlContainers.DataBind();
-            }
+            ctlContainers.DataSource = members;
+            ctlContainers.DataBind();
+            ctlContainers.Enabled = ctlContainers.Items.Count > 0;
         }
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
             Debug.WriteLine(String.Format("ctlSubjects_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlSubjects.SelectedValue));
 
+            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-            ctlSubjectContext.DataBind();
         }
 
         protected void ctlContainers_SelectedIndexChanged(object sender, EventArgs e)
         {
             Debug.WriteLine(String.Format("ctlContainers_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlContainers.SelectedValue));
 
+            myContextController.ActiveContainer = ctlContainers.SelectedValue;
             ctlContainerContext.ContextKey = ctlContainers.SelectedValue;
-            ctlContainerContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)

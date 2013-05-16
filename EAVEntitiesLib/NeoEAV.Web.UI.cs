@@ -160,6 +160,40 @@ namespace NeoEAV.Web.UI
             }
         }
 
+        private Project activeProject;
+        public string ActiveProject
+        {
+            get { return(activeProject != null ? activeProject.Name : null); }
+            set { activeProject = context.Projects.FirstOrDefault(it => it.Name == value); }
+        }
+
+        private Subject activeSubject;
+        public string ActiveSubject
+        {
+            get { return (activeSubject != null ? activeSubject.MemberID : null); }
+            set { activeSubject = GetSubjectsForActiveProject().FirstOrDefault(it => it.MemberID == value); }
+        }
+
+        private Container activeContainer;
+        public string ActiveContainer
+        {
+            get { return (activeContainer != null ? activeContainer.Name : null); }
+            set { activeContainer = GetContainersForActiveProject().FirstOrDefault(it => it.Name == value); }
+        }
+
+        private ContainerInstance activeContainerInstance;
+        public string ActiveContainerInstance
+        {
+            get { return (activeContainerInstance != null ? activeContainerInstance.RepeatInstance.ToString() : null); }
+            set { activeContainerInstance = GetContainerInstancesForActiveSubjectAndContainer().FirstOrDefault(it => it.RepeatInstance.ToString() == value); }
+        }
+
+        public IEnumerable<Subject> GetSubjectsForActiveProject() { return (activeProject != null ? activeProject.Subjects : Enumerable.Empty<Subject>()); }
+
+        public IEnumerable<Container> GetContainersForActiveProject() { return (activeProject != null ? activeProject.Containers : Enumerable.Empty<Container>()); }
+
+        public IEnumerable<ContainerInstance> GetContainerInstancesForActiveSubjectAndContainer() { return (activeSubject != null ? activeSubject.ContainerInstances.Where(it => it.Container == activeContainer && it.ParentContainerInstance == null) : Enumerable.Empty<ContainerInstance>()); }
+
         public void Save(Control contextControl)
         {
             ContextControlSet set = new ContextControlSet();
@@ -197,6 +231,13 @@ namespace NeoEAV.Web.UI
     {
         ContextType ContextType { get; }
         string ContextKey { get; set; }
+    }
+
+    public interface IEAVProject
+    {
+        Project Project { get; }
+
+        IEnumerable<Subject> Subjects { get; }
     }
 
     public abstract class EAVContextControl : Control, IEAVContextControl, IDataItemContainer
