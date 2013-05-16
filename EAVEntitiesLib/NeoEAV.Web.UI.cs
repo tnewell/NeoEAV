@@ -27,7 +27,7 @@ namespace NeoEAV.Web.UI
 
             if (instance == null && container != null && subject != null && parentInstanceCorrect && createIfMissing)
             {
-                if (String.IsNullOrWhiteSpace(repeatInstance))
+                if (!String.IsNullOrWhiteSpace(repeatInstance))
                 {
                     int newRepeatInstance = subject.ContainerInstances.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance).Max(it => it.RepeatInstance) + 1;
 
@@ -242,14 +242,14 @@ namespace NeoEAV.Web.UI
 
     public abstract class EAVContextControl : Control, IEAVContextControl, IDataItemContainer
     {
-        public static T FindAncestorDataItem<T>(Control control, ContextType ancestorContextType) where T : class
+        public static IEAVContextControl FindAncestor(Control control, ContextType ancestorContextType)
         {
             Control container = control != null ? control.Parent : null;
             while (container != null)
             {
                 if (container is IEAVContextControl && ((IEAVContextControl)container).ContextType == ancestorContextType)
                 {
-                    return (DataBinder.GetDataItem(container) as T);
+                    return (container as IEAVContextControl);
                 }
 
                 container = container.Parent;
@@ -258,7 +258,19 @@ namespace NeoEAV.Web.UI
             return (null);
         }
 
-        public virtual string ContextKey { get { return (ViewState["ContextKey"] as string); } set { ViewState["ContextKey"] = value; } }
+        public static T FindAncestorDataItem<T>(Control control, ContextType ancestorContextType) where T : class
+        {
+            IEAVContextControl container = FindAncestor(control, ancestorContextType);
+
+            if (container != null)
+            {
+                return (DataBinder.GetDataItem(container) as T);
+            }
+
+            return (null);
+        }
+
+        public virtual string ContextKey { get { return (ViewState["ContextKey"] as string); } set { string oldKey = ContextKey; ViewState["ContextKey"] = value; } }
 
         public abstract ContextType ContextType { get; }
 
@@ -534,7 +546,6 @@ namespace NeoEAV.Web.UI
                 set
                 {
                     base.ContextKey = value;
-                    ChildControlsCreated = false;
                 }
             }
 
@@ -557,7 +568,13 @@ namespace NeoEAV.Web.UI
                         }
                         else
                         {
-                            Controls.Add(new EAVAutoInstanceContextControl() { ContextKey = container.ContainerInstances.Select(it => it.RepeatInstance.ToString()).FirstOrDefault() });
+                            Control ctl = FindAncestor(this, UI.ContextType.Subject) as Control;
+                            if (ctl != null && DataBinder.GetPropertyValue(ctl, "DataSource") == null)
+                                ctl.DataBind();
+
+                            Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
+
+                            Controls.Add(new EAVAutoInstanceContextControl() { ContextKey = subject != null ? subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).FirstOrDefault() : null });
                         }
                     }
                 }
@@ -589,7 +606,6 @@ namespace NeoEAV.Web.UI
                 set
                 {
                     base.ContextKey = value;
-                    ChildControlsCreated = false;
                 }
             }
 
@@ -640,7 +656,6 @@ namespace NeoEAV.Web.UI
                 set
                 {
                     base.ContextKey = value;
-                    ChildControlsCreated = false;
                 }
             }
             

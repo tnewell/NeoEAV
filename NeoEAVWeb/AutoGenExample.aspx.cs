@@ -21,15 +21,20 @@ namespace NeoEAVWeb
         {
             Debug.WriteLine(null);
             Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
+            Debug.Indent();
 
             base.OnInitComplete(e);
 
             ctlProjectContext.DataSource = myContextController.Projects;
+
+            Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
+            Debug.Unindent();
         }
 
         protected void Page_Load(object sender, EventArgs e)
         {
             Debug.WriteLine(String.Format("Page_Load"));
+            Debug.Indent();
 
             myContextController.ActiveProject = ctlProjectContext.ContextKey;
             myContextController.ActiveSubject = ctlSubjectContext.ContextKey;
@@ -39,6 +44,9 @@ namespace NeoEAVWeb
             {
                 BindProjects();
             }
+
+            Debug.WriteLine(String.Format("Page_Load"));
+            Debug.Unindent();
         }
 
         protected override void CreateChildControls()
@@ -48,6 +56,7 @@ namespace NeoEAVWeb
 
             base.CreateChildControls();
 
+            Debug.WriteLine(String.Format("CreateChildControls"));
             Debug.Unindent();
         }
 
@@ -70,6 +79,7 @@ namespace NeoEAVWeb
 
             base.OnPreRender(e);
 
+            Debug.WriteLine(String.Format("OnPreRender"));
             Debug.Unindent();
         }
 
@@ -80,6 +90,7 @@ namespace NeoEAVWeb
 
             base.OnPreRenderComplete(e);
 
+            Debug.WriteLine(String.Format("OnPreRenderComplete"));
             Debug.Unindent();
         }
 
