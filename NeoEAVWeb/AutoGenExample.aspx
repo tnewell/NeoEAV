@@ -17,7 +17,7 @@
                 <asp:Button runat="server" ID="ctlSaveButton" OnClick="ctlSaveButton_Click" Text="Save" />
             </p>
             <div style="padding-top: 35px;">
-                <eav:eavprojectcontextcontrol runat="server" id="ctlProjectContext" contextkey="Test Project 1">
+                <eav:eavProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 1" StaticContextKey="true">
                 <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "Description") %>'>
                     <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="">
                         <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
@@ -29,7 +29,7 @@
                         <hr />
                     </eav:EAVSubjectContextControl>
                 </asp:Panel>
-            </eav:eavprojectcontextcontrol>
+            </eav:eavProjectContextControl>
             </div>
         </div>
     </form>

@@ -25,10 +25,12 @@ namespace NeoEAVWeb
 
             base.OnInitComplete(e);
 
+            // This needs to be here before we load view state to give meaning
+            // to any restored context key attributes
             ctlProjectContext.DataSource = myContextController.Projects;
 
-            Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
             Debug.Unindent();
+            Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
         }
 
         protected void Page_Load(object sender, EventArgs e)
@@ -36,6 +38,7 @@ namespace NeoEAVWeb
             Debug.WriteLine(String.Format("Page_Load"));
             Debug.Indent();
 
+            // Restore our controller after view state loaded.
             myContextController.ActiveProject = ctlProjectContext.ContextKey;
             myContextController.ActiveSubject = ctlSubjectContext.ContextKey;
             myContextController.ActiveContainer = ctlContainerContext.ContextKey;
@@ -45,8 +48,8 @@ namespace NeoEAVWeb
                 BindProjects();
             }
 
-            Debug.WriteLine(String.Format("Page_Load"));
             Debug.Unindent();
+            Debug.WriteLine(String.Format("Page_Load"));
         }
 
         protected override void CreateChildControls()
@@ -56,8 +59,8 @@ namespace NeoEAVWeb
 
             base.CreateChildControls();
 
-            Debug.WriteLine(String.Format("CreateChildControls"));
             Debug.Unindent();
+            Debug.WriteLine(String.Format("CreateChildControls"));
         }
 
         protected override void OnDataBinding(EventArgs e)
@@ -68,6 +71,7 @@ namespace NeoEAVWeb
             base.OnDataBinding(e);
 
             Debug.Unindent();
+            Debug.WriteLine(String.Format("OnDataBinding"));
         }
 
         protected override void OnPreRender(EventArgs e)
@@ -75,12 +79,10 @@ namespace NeoEAVWeb
             Debug.WriteLine(String.Format("OnPreRender"));
             Debug.Indent();
 
-            ctlProjectContext.DataBind();
-
             base.OnPreRender(e);
 
-            Debug.WriteLine(String.Format("OnPreRender"));
             Debug.Unindent();
+            Debug.WriteLine(String.Format("OnPreRender"));
         }
 
         protected override void OnPreRenderComplete(EventArgs e)
@@ -90,8 +92,8 @@ namespace NeoEAVWeb
 
             base.OnPreRenderComplete(e);
 
-            Debug.WriteLine(String.Format("OnPreRenderComplete"));
             Debug.Unindent();
+            Debug.WriteLine(String.Format("OnPreRenderComplete"));
         }
 
         private void BindProjects()
@@ -107,6 +109,7 @@ namespace NeoEAVWeb
         {
             myContextController.ActiveSubject = null;
             ctlSubjectContext.ContextKey = null;
+            // TODO: Don't appear to need it, but what happens if we bind here?
 
             List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
@@ -122,6 +125,7 @@ namespace NeoEAVWeb
         {
             myContextController.ActiveContainer = null;
             ctlContainerContext.ContextKey = null;
+            // TODO: Don't appear to need it, but what happens if we bind here?
 
             List<string> members = myContextController.GetContainersForActiveProject().Select(it => it.Name).ToList();
 
@@ -138,7 +142,9 @@ namespace NeoEAVWeb
             Debug.WriteLine(String.Format("ctlSubjects_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlSubjects.SelectedValue));
 
             myContextController.ActiveSubject = ctlSubjects.SelectedValue;
+            
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
+            ctlSubjectContext.DataBind();
         }
 
         protected void ctlContainers_SelectedIndexChanged(object sender, EventArgs e)
@@ -146,12 +152,14 @@ namespace NeoEAVWeb
             Debug.WriteLine(String.Format("ctlContainers_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlContainers.SelectedValue));
 
             myContextController.ActiveContainer = ctlContainers.SelectedValue;
+
             ctlContainerContext.ContextKey = ctlContainers.SelectedValue;
+            ctlContainerContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            myContextController.Save(this);
+            //myContextController.Save(this);
         }
     }
 }

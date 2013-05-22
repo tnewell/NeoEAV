@@ -18,13 +18,23 @@ namespace NeoEAVWeb
 
         protected override void OnInitComplete(EventArgs e)
         {
+            Debug.WriteLine(null);
+            Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
+            Debug.Indent();
+
             base.OnInitComplete(e);
 
             ctlProjectContext.DataSource = myContextController.Projects;
+
+            Debug.Unindent();
+            Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
         }
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            Debug.WriteLine(String.Format("Page_Load"));
+            Debug.Indent();
+
             myContextController.ActiveProject = ctlProjectContext.ContextKey;
             myContextController.ActiveSubject = ctlSubjectContext.ContextKey;
             myContextController.ActiveContainer = ctlContainerContext.ContextKey;
@@ -33,13 +43,20 @@ namespace NeoEAVWeb
             {
                 BindProjects();
             }
-        }
 
+            Debug.Unindent();
+            Debug.WriteLine(String.Format("Page_Load"));
+        }
+        
         protected override void OnPreRender(EventArgs e)
         {
-            ctlProjectContext.DataBind();
+            Debug.WriteLine(String.Format("OnPreRender"));
+            Debug.Indent();
 
             base.OnPreRender(e);
+
+            Debug.Unindent();
+            Debug.WriteLine(String.Format("OnPreRender"));
         }
 
         private void BindProjects()
@@ -54,6 +71,7 @@ namespace NeoEAVWeb
         {
             myContextController.ActiveSubject = null;
             ctlSubjectContext.ContextKey = null;
+            // TODO: Don't appear to need it, but what happens if we bind here?
 
             List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
@@ -63,40 +81,21 @@ namespace NeoEAVWeb
             ctlSubjects.DataSource = members;
             ctlSubjects.DataBind();
             ctlSubjects.Enabled = ctlSubjects.Items.Count > 0;
-
-            BindInstances();
-        }
-
-        private void BindInstances()
-        {
-            ctlInstanceContext.ContextKey = null;
-
-            List<string> instances = myContextController.GetContainerInstancesForActiveSubjectAndContainer().Select(it => it.RepeatInstance.ToString()).ToList(); //subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).ToList();
-
-            if (instances.Any())
-                instances.Insert(0, String.Empty);
-
-            ctlInstances.DataSource = instances;
-            ctlInstances.DataBind();
-            ctlInstances.Enabled = ctlInstances.Items.Count > 0;
         }
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
-            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-            
-            BindInstances();
-        }
+            Debug.WriteLine(String.Format("ctlSubjects_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlSubjects.SelectedValue));
 
-        protected void ctlInstances_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
+            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
+            
+            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
+            ctlSubjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            myContextController.Save(this);
+            //myContextController.Save(this);
         }
     }
 }
