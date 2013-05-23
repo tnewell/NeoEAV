@@ -16,7 +16,7 @@
         </p>
         <p>
             <eav:EAVProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 2">
-                <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="">
+                <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="" DynamicContextKey="true">
                     <eav:EAVContainerContextControl runat="server" ID="ctlRootContainer" ContextKey="Test Root Container 2">
                         <eav:EAVInstanceContextRepeater runat="server" ID="ctlInstanceRepeater">
                             <ItemTemplate>

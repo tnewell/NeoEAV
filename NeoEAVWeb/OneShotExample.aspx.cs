@@ -2,11 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 
-using NeoEAV.Data.DataClasses;
 using NeoEAV.Web.UI;
 
 
@@ -90,7 +86,7 @@ namespace NeoEAVWeb
             myContextController.ActiveSubject = ctlSubjects.SelectedValue;
             
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-            ctlSubjectContext.DataBind();
+            ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)

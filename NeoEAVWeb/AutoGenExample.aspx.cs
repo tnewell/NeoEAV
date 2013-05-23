@@ -2,13 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 
-using NeoEAV.Data.DataClasses;
 using NeoEAV.Web.UI;
-using NeoEAV.Web.UI.AutoGen;
 
 
 namespace NeoEAVWeb
@@ -144,7 +139,7 @@ namespace NeoEAVWeb
             myContextController.ActiveSubject = ctlSubjects.SelectedValue;
             
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-            ctlSubjectContext.DataBind();
+            ctlProjectContext.DataBind();
         }
 
         protected void ctlContainers_SelectedIndexChanged(object sender, EventArgs e)
@@ -154,7 +149,7 @@ namespace NeoEAVWeb
             myContextController.ActiveContainer = ctlContainers.SelectedValue;
 
             ctlContainerContext.ContextKey = ctlContainers.SelectedValue;
-            ctlContainerContext.DataBind();
+            ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)

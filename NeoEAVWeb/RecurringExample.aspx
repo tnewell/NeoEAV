@@ -16,10 +16,10 @@
             <asp:Button runat="server" ID="ctlSaveButton" OnClick="ctlSaveButton_Click" Text="Save" />
         </div>
         <eav:EAVProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 3">
-            <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="">
+            <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="" DynamicContextKey="true">
                 <eav:EAVContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="Test Root Container 3">
                     <asp:Panel runat="server" GroupingText='<%# DataBinder.GetPropertyValue(Container.DataItem, "Name") %>'>
-                        <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" ContextKey="">
+                        <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" ContextKey="" DynamicContextKey="true">
 
                             <div style="padding: 5px;">
                                 <eav:EAVAttributeContextControl runat="server" ContextKey="Test Attribute 11">

@@ -17,9 +17,9 @@
                 <asp:Button runat="server" ID="ctlSaveButton" OnClick="ctlSaveButton_Click" Text="Save" />
             </p>
             <div style="padding-top: 35px;">
-                <eav:eavProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 1" StaticContextKey="true">
+                <eav:eavProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 1">
                 <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "Description") %>'>
-                    <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="">
+                    <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" ContextKey="" DynamicContextKey="true">
                         <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                             Subject:
                             <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "MemberID") %>'></asp:Label>

@@ -230,11 +230,16 @@ namespace NeoEAV.Web.UI
     [Flags]
     public enum BindingType { Unknown = 0, Data = 1, Metadata = 2 }
 
+    // TODO: Move IDataItemContainer here?
     public interface IEAVContextControl
     {
+        // TODO: Turn this into DataParent and MetadataParent
         IEAVContextControl ParentContextControl { get; }
+
         ContextType ContextType { get; }
+        
         string ContextKey { get; set; }
+        
         BindingType BindingType { get; }
     }
 
@@ -268,7 +273,15 @@ namespace NeoEAV.Web.UI
             return (null);
         }
 
+        protected bool ContextKeyChanged { get; set; }
+
         public abstract IEAVContextControl ParentContextControl { get; }
+
+        public abstract ContextType ContextType { get; }
+
+        public abstract object DataItem { get; }
+
+        public abstract BindingType BindingType { get; }
 
         public virtual string ContextKey
         {
@@ -280,24 +293,17 @@ namespace NeoEAV.Web.UI
             }
         }
 
-        public abstract ContextType ContextType { get; }
-
-        public abstract object DataItem { get; }
-
         public virtual int DataItemIndex { get { return (0); } }
 
         public virtual int DisplayIndex { get { return (0); } }
 
         public virtual object DataSource { get; set; }
 
-        public bool ContextKeyChanged { get; set; }
-
-        public bool StaticContextKey { get; set; }
-
-        public abstract BindingType BindingType { get; }
+        public virtual bool DynamicContextKey { get; set; }
 
         protected override void OnInit(EventArgs e)
         {
+            // This resets our status after object creation
             ContextKeyChanged = false;
 
             base.OnInit(e);
@@ -372,7 +378,7 @@ namespace NeoEAV.Web.UI
             Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
             DataSource = project != null ? project.Subjects : null;
 
-            if (ParentContextControl.BindingType != UI.BindingType.Unknown && !StaticContextKey)
+            if (ParentContextControl.BindingType != UI.BindingType.Unknown && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -422,7 +428,7 @@ namespace NeoEAV.Web.UI
                 DataSource = dataSource.Where(it => it.ParentContainer == parentContainer);
             }
 
-            if (ParentContextControl.BindingType == UI.BindingType.Metadata && !StaticContextKey)
+            if (ParentContextControl.BindingType == UI.BindingType.Metadata && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -473,7 +479,7 @@ namespace NeoEAV.Web.UI
                 DataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
             }
 
-            if (ParentContextControl.BindingType != UI.BindingType.Unknown && !StaticContextKey)
+            if (ParentContextControl.BindingType != UI.BindingType.Unknown && DynamicContextKey)
             {
                 Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
 
@@ -525,7 +531,7 @@ namespace NeoEAV.Web.UI
             Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
             DataSource = container != null ? container.Attributes : null;
 
-            if (ParentContextControl.BindingType == UI.BindingType.Metadata && !StaticContextKey)
+            if (ParentContextControl.BindingType == UI.BindingType.Metadata && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -620,13 +626,6 @@ namespace NeoEAV.Web.UI
             Subject subject = EAVContextControl.FindAncestorDataItem<Subject>(this, ContextType.Subject);
             DataSource = subject != null ? subject.ContainerInstances : null;
 
-            FilterDataSource();
-
-            base.OnDataBinding(e);
-        }
-
-        private void FilterDataSource()
-        {
             IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
             if (dataSource != null)
             {
@@ -636,10 +635,12 @@ namespace NeoEAV.Web.UI
                 dataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
 
                 if (!dataSource.Any() || container.IsRepeating)
-                    dataSource = dataSource.Concat(new ContainerInstance[] { null } );
+                    dataSource = dataSource.Concat(new ContainerInstance[] { null });
 
                 DataSource = dataSource;
             }
+
+            base.OnDataBinding(e);
         }
     }
 
@@ -666,9 +667,9 @@ namespace NeoEAV.Web.UI
                         }
                         else
                         {
-                            //Control ctl = FindAncestor(this, UI.ContextType.Subject) as Control;
-                            //if (ctl != null && DataBinder.GetPropertyValue(ctl, "DataSource") == null)
-                            //    ctl.DataBind();
+                            Control ctl = FindAncestor(this, UI.ContextType.Subject) as Control;
+                            if (ctl != null && DataBinder.GetPropertyValue(ctl, "DataSource") == null)
+                                ctl.DataBind();
 
                             Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
 

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 
-using NeoEAV.Data.DataClasses;
 using NeoEAV.Web.UI;
 
 
@@ -36,8 +32,6 @@ namespace NeoEAVWeb
 
         protected override void OnPreRender(EventArgs e)
         {
-            ctlProjectContext.DataBind();
-
             base.OnPreRender(e);
         }
 
@@ -67,12 +61,14 @@ namespace NeoEAVWeb
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
             myContextController.ActiveSubject = ctlSubjects.SelectedValue;
+
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
+            ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            myContextController.Save(this);
+            //myContextController.Save(this);
         }
     }
 }
