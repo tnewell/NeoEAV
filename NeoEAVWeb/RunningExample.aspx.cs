@@ -13,9 +13,9 @@ namespace NeoEAVWeb
 
         protected override void OnInitComplete(EventArgs e)
         {
-            ctlProjectContext.DataSource = myContextController.Projects;
-
             base.OnInitComplete(e);
+
+            ctlProjectContext.DataSource = myContextController.Projects;
         }
 
         protected void Page_Load(object sender, EventArgs e)
@@ -30,11 +30,6 @@ namespace NeoEAVWeb
             }
         }
 
-        protected override void OnPreRender(EventArgs e)
-        {
-            base.OnPreRender(e);
-        }
-
         private void BindProjects()
         {
             ctlProjectContext.DataSource = myContextController.Projects;
@@ -45,8 +40,9 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
-            myContextController.ActiveSubject = null;
             ctlSubjectContext.ContextKey = null;
+
+            myContextController.ActiveSubject = null;
 
             List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
@@ -60,15 +56,15 @@ namespace NeoEAVWeb
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
-
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
             ctlProjectContext.DataBind();
+            
+            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            //myContextController.Save(this);
+            myContextController.Save(this);
         }
     }
 }

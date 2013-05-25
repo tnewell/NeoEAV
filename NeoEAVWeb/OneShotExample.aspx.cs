@@ -14,16 +14,9 @@ namespace NeoEAVWeb
 
         protected override void OnInitComplete(EventArgs e)
         {
-            Debug.WriteLine(null);
-            Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
-            Debug.Indent();
-
             base.OnInitComplete(e);
 
             ctlProjectContext.DataSource = myContextController.Projects;
-
-            Debug.Unindent();
-            Debug.WriteLine(String.Format("OnInitComplete {{ IsPostBack = {0} }}", IsPostBack));
         }
 
         protected void Page_Load(object sender, EventArgs e)
@@ -43,17 +36,6 @@ namespace NeoEAVWeb
             Debug.Unindent();
             Debug.WriteLine(String.Format("Page_Load"));
         }
-        
-        protected override void OnPreRender(EventArgs e)
-        {
-            Debug.WriteLine(String.Format("OnPreRender"));
-            Debug.Indent();
-
-            base.OnPreRender(e);
-
-            Debug.Unindent();
-            Debug.WriteLine(String.Format("OnPreRender"));
-        }
 
         private void BindProjects()
         {
@@ -65,9 +47,9 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
-            myContextController.ActiveSubject = null;
             ctlSubjectContext.ContextKey = null;
-            // TODO: Don't appear to need it, but what happens if we bind here?
+            
+            myContextController.ActiveSubject = null;
 
             List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
@@ -81,17 +63,15 @@ namespace NeoEAVWeb
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Debug.WriteLine(String.Format("ctlSubjects_SelectedIndexChanged {{ SelectedValue = '{0}' }}", ctlSubjects.SelectedValue));
-
-            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
-            
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
             ctlProjectContext.DataBind();
+            
+            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            //myContextController.Save(this);
+            myContextController.Save(this);
         }
     }
 }
