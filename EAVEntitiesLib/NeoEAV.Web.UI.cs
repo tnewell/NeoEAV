@@ -575,7 +575,7 @@ namespace NeoEAV.Web.UI
 
             if (ctl == null)
             {
-                ctl = new AutoGen.EAVAutoInstanceContextControl();
+                ctl = new AutoGen.EAVAutoInstanceContextControl() { DynamicContextKey = true };
                 container.Controls.Add(ctl);
                 container.Controls.Add(new LiteralControl("<br/>"));
             }

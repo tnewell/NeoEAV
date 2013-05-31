@@ -9,7 +9,7 @@ namespace NeoEAVWeb
 {
     public partial class RunningExample : System.Web.UI.Page
     {
-        EAVContextController myContextController = new EAVContextController();
+        private EAVContextController myContextController = new EAVContextController();
 
         protected override void OnInitComplete(EventArgs e)
         {

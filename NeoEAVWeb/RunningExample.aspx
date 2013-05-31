@@ -27,7 +27,7 @@
                                 <asp:Panel runat="server" GroupingText='<%# DataBinder.GetPropertyValue(Container.DataItem, "Name") %>'>
                                     <eav:EAVInstanceContextRepeater runat="server" ID="ctlInstanceRepeater">
                                         <ItemTemplate>
-                                            <eav:EAVInstanceContextControl runat="server">
+                                            <eav:EAVInstanceContextControl runat="server" DynamicContextKey="true">
                                                 <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                                     Instance:
                                                     <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "RepeatInstance") %>'></asp:Label>

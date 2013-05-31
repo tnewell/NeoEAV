@@ -10,7 +10,7 @@ namespace NeoEAVWeb
 {
     public partial class RecurringExample : System.Web.UI.Page
     {
-        EAVContextController myContextController = new EAVContextController();
+        private EAVContextController myContextController = new EAVContextController();
 
         protected override void OnInitComplete(EventArgs e)
         {
