@@ -625,7 +625,7 @@ namespace NeoEAV.Web.UI
 
             dataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
 
-            if (subject != null && (!dataSource.Any() || container.IsRepeating))
+            if (!dataSource.Any() || container.IsRepeating)
                 dataSource = dataSource.Concat(new ContainerInstance[] { null });
 
             DataSource = dataSource;

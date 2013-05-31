@@ -53,7 +53,7 @@
                                             <asp:Panel runat="server" GroupingText='<%# DataBinder.GetPropertyValue(Container.DataItem, "Name") %>'>
                                                 <eav:EAVInstanceContextRepeater runat="server" ID="ctlChildInstance1Repeater">
                                                     <ItemTemplate>
-                                                        <eav:EAVInstanceContextControl runat="server" DynamicContextKey="true">
+                                                        <eav:EAVInstanceContextControl runat="server">
                                                             <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                                                 Instance:
                                                                 <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "RepeatInstance") %>'></asp:Label>
@@ -85,7 +85,7 @@
                                             <asp:Panel runat="server" GroupingText='<%# DataBinder.GetPropertyValue(Container.DataItem, "Name") %>'>
                                                 <eav:EAVInstanceContextRepeater runat="server" ID="ctlChildInstance2Repeater">
                                                     <ItemTemplate>
-                                                        <eav:EAVInstanceContextControl runat="server" DynamicContextKey="true">
+                                                        <eav:EAVInstanceContextControl runat="server">
                                                             <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                                                 Instance:
                                                                 <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "RepeatInstance") %>'></asp:Label>
