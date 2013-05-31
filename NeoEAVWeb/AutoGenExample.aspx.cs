@@ -16,8 +16,6 @@ namespace NeoEAVWeb
         {
             base.OnInitComplete(e);
 
-            // This needs to be here before we load view state to give meaning
-            // to any restored context key attributes
             ctlProjectContext.DataSource = myContextController.Projects;
         }
 
@@ -36,11 +34,18 @@ namespace NeoEAVWeb
 
         private void BindProjects()
         {
-            ctlProjectContext.DataSource = myContextController.Projects;
-            ctlProjectContext.DataBind();
+            ctlProjectContext.ContextKey = null;
 
-            BindSubjects();
-            BindContainers();
+            myContextController.ActiveProject = null;
+
+            List<string> projects = myContextController.Projects.Select(it => it.Name).ToList();
+
+            if (projects.Any())
+                projects.Insert(0, String.Empty);
+
+            ctlProjects.DataSource = projects;
+            ctlProjects.DataBind();
+            ctlProjects.Enabled = ctlProjects.Items.Count > 0;
         }
 
         private void BindSubjects()
@@ -75,6 +80,17 @@ namespace NeoEAVWeb
             ctlContainers.Enabled = ctlContainers.Items.Count > 0;
         }
 
+        protected void ctlProjects_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ctlProjectContext.ContextKey = ctlProjects.SelectedValue;
+            ctlProjectContext.DataBind();
+
+            myContextController.ActiveProject = ctlProjects.SelectedValue;
+
+            BindSubjects();
+            BindContainers();
+        }
+
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
@@ -94,6 +110,8 @@ namespace NeoEAVWeb
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
             myContextController.Save(this);
+
+            ctlProjectContext.DataBind();
         }
     }
 }

@@ -9,15 +9,15 @@
 </head>
 <body>
     <form id="form1" runat="server">
-        <div>
+        <div style="margin: 5px;">
             <asp:Button runat="server" ID="ctlGoButton" OnClick="ctlGoButton_Click" Text="Go" /> 
         </div>
-        <div>
+        <div style="margin: 5px;">
             <a href="OneShotExample.aspx">One-Shot Form Example</a>
             <br />
-            <a href="RecurringExample.aspx">Recurring Form Example</a>
-            <br />
             <a href="RunningExample.aspx">Running Form Example</a>
+            <br />
+            <a href="RecurringExample.aspx">Recurring Form Example</a>
             <br />
             <a href="AutoGenExample.aspx">AutoGen Example</a>
         </div>

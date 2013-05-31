@@ -22,13 +22,13 @@ namespace NeoEAVWeb {
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
         
         /// <summary>
-        /// ctlSubjects control.
+        /// ctlProjects control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ctlSubjects;
+        protected global::System.Web.UI.WebControls.DropDownList ctlProjects;
         
         /// <summary>
         /// ctlContainers control.
@@ -38,6 +38,15 @@ namespace NeoEAVWeb {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.DropDownList ctlContainers;
+        
+        /// <summary>
+        /// ctlSubjects control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.DropDownList ctlSubjects;
         
         /// <summary>
         /// ctlSaveButton control.

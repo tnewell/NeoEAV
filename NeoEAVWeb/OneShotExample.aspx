@@ -11,10 +11,10 @@
 <body>
     <form id="form1" runat="server">
     <div>
-        <p>
+        <div style="padding: 5px;">
             <asp:DropDownList runat="server" ID="ctlSubjects" AutoPostBack="true" OnSelectedIndexChanged="ctlSubjects_SelectedIndexChanged"></asp:DropDownList>
             <asp:Button runat="server" ID="ctlSaveButton" OnClick="ctlSaveButton_Click" Text="Save" />
-        </p>
+        </div>
         <div style="padding-top: 35px;">
             <eav:EAVProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 1">
                 <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "Description") %>'>
@@ -25,7 +25,7 @@
                         </div>
                         <eav:EAVContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="Test Root Container 1">
                             <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>'>
-                                <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" ContextKey="1">
+                                <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" DynamicContextKey="true">
                                     <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                         Instance:
                                         <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "RepeatInstance") %>'></asp:Label>
