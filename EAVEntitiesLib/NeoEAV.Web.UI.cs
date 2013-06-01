@@ -123,9 +123,15 @@ namespace NeoEAV.Web.UI
 
                         contextSet.Container = parentContainer;
                         contextSet.Instance = parentInstance;
+                        contextSet.InstanceControl = container as IEAVContextControl;
 
                         if (!contextSet.Instance.Values.Any() && !contextSet.Instance.ChildContainerInstances.Any())
+                        {
                             context.ContainerInstances.Remove(contextSet.Instance);
+                            
+                            if (contextSet.InstanceControl != null)
+                                contextSet.InstanceControl.ContextKey = null;
+                        }
 
                         contextSet.Instance = null;
                         contextSet.InstanceControl = null;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+using NeoEAV.Data.DataClasses;
 using NeoEAV.Web.UI;
 
 
@@ -29,6 +30,13 @@ namespace NeoEAVWeb
             {
                 BindProjects();
             }
+        }
+
+        protected override void OnPreRender(EventArgs e)
+        {
+            base.OnPreRender(e);
+
+            ctlSaveButton.Enabled = ctlInstances.Items.Count == 0 || ctlInstances.SelectedIndex > 0;
         }
 
         private void BindProjects()
@@ -89,9 +97,25 @@ namespace NeoEAVWeb
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            myContextController.Save(this);
+            var oldList = myContextController.GetContainerInstancesForActiveSubjectAndContainer().ToList();
 
+            myContextController.Save(this);
             ctlProjectContext.DataBind();
+
+            var newList = myContextController.GetContainerInstancesForActiveSubjectAndContainer().ToList();
+
+            ContainerInstance oldInstance = oldList.Except(newList).FirstOrDefault();
+            ContainerInstance newInstance = newList.Except(oldList).FirstOrDefault();
+            if (oldInstance != null || newInstance != null)
+            {
+                BindInstances();
+
+                if (newInstance != null)
+                {
+                    ctlInstances.SelectedValue = newInstance.RepeatInstance.ToString();
+                    ctlInstanceContext.ContextKey = newInstance.RepeatInstance.ToString();
+                }
+            }
         }
     }
 }
