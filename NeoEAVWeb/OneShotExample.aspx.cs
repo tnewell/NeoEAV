@@ -21,20 +21,15 @@ namespace NeoEAVWeb
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            Debug.WriteLine(String.Format("Page_Load"));
-            Debug.Indent();
-
             myContextController.ActiveProject = ctlProjectContext.ContextKey;
             myContextController.ActiveSubject = ctlSubjectContext.ContextKey;
             myContextController.ActiveContainer = ctlContainerContext.ContextKey;
+            myContextController.ActiveContainerInstance = ctlInstanceContext.ContextKey;
 
             if (!IsPostBack)
             {
                 BindProjects();
             }
-
-            Debug.Unindent();
-            Debug.WriteLine(String.Format("Page_Load"));
         }
 
         private void BindProjects()
@@ -47,10 +42,6 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
-            ctlSubjectContext.ContextKey = null;
-            
-            myContextController.ActiveSubject = null;
-
             List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
             if (members.Any())
@@ -63,10 +54,11 @@ namespace NeoEAVWeb
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-            ctlProjectContext.DataBind();
-            
             myContextController.ActiveSubject = ctlSubjects.SelectedValue;
+            
+            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
+            
+            ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)

@@ -25,6 +25,7 @@ namespace NeoEAVWeb
             myContextController.ActiveProject = ctlProjectContext.ContextKey;
             myContextController.ActiveSubject = ctlSubjectContext.ContextKey;
             myContextController.ActiveContainer = ctlContainerContext.ContextKey;
+            myContextController.ActiveContainerInstance = ctlInstanceContext.ContextKey;
 
             if (!IsPostBack)
             {
@@ -36,7 +37,7 @@ namespace NeoEAVWeb
         {
             base.OnPreRender(e);
 
-            ctlSaveButton.Enabled = ctlInstances.Items.Count == 0 || ctlInstances.SelectedIndex > 0;
+            ctlSaveButton.Enabled = ctlSubjects.SelectedIndex > 0;
         }
 
         private void BindProjects()
@@ -49,10 +50,6 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
-            ctlSubjectContext.ContextKey = null;
-
-            myContextController.ActiveSubject = null;
-
             List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
             if (members.Any())
@@ -67,9 +64,7 @@ namespace NeoEAVWeb
 
         private void BindInstances()
         {
-            ctlInstanceContext.ContextKey = null;
-
-            List<string> instances = myContextController.GetContainerInstancesForActiveSubjectAndContainer().Select(it => it.RepeatInstance.ToString()).ToList(); //subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).ToList();
+            List<string> instances = myContextController.GetContainerInstancesForActiveSubjectAndContainer().Select(it => it.RepeatInstance.ToString()).ToList();
 
             if (instances.Any())
                 instances.Insert(0, String.Empty);
@@ -77,45 +72,44 @@ namespace NeoEAVWeb
             ctlInstances.DataSource = instances;
             ctlInstances.DataBind();
             ctlInstances.Enabled = ctlInstances.Items.Count > 0;
+
+            Debug.WriteLine(String.Format("BindInstances {{ ActiveInstance = '{0}', InstanceContext = '{1}' }}", myContextController.ActiveContainerInstance, ctlInstanceContext.ContextKey));
+
+            if (myContextController.ActiveContainerInstance != ctlInstanceContext.ContextKey)
+                myContextController.ActiveContainerInstance = ctlInstanceContext.ContextKey;
+            
+            ctlInstances.SelectedValue = myContextController.ActiveContainerInstance;
         }
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-            ctlProjectContext.DataBind();
-
             myContextController.ActiveSubject = ctlSubjects.SelectedValue;
+
+            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
+            
+            ctlProjectContext.DataBind();
 
             BindInstances();
         }
 
         protected void ctlInstances_SelectedIndexChanged(object sender, EventArgs e)
         {
+            myContextController.ActiveContainerInstance = ctlInstances.SelectedValue;
+            
             ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
+
             ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            var oldList = myContextController.GetContainerInstancesForActiveSubjectAndContainer().ToList();
+            Debug.WriteLine("Save");
 
             myContextController.Save(this);
+
             ctlProjectContext.DataBind();
 
-            var newList = myContextController.GetContainerInstancesForActiveSubjectAndContainer().ToList();
-
-            ContainerInstance oldInstance = oldList.Except(newList).FirstOrDefault();
-            ContainerInstance newInstance = newList.Except(oldList).FirstOrDefault();
-            if (oldInstance != null || newInstance != null)
-            {
-                BindInstances();
-
-                if (newInstance != null)
-                {
-                    ctlInstances.SelectedValue = newInstance.RepeatInstance.ToString();
-                    ctlInstanceContext.ContextKey = newInstance.RepeatInstance.ToString();
-                }
-            }
+            BindInstances();
         }
     }
 }

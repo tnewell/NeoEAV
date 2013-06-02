@@ -32,6 +32,13 @@ namespace NeoEAVWeb
             }
         }
 
+        protected override void OnPreRender(EventArgs e)
+        {
+            base.OnPreRender(e);
+
+            ctlSaveButton.Enabled = ctlSubjects.SelectedIndex > 0 && ctlContainers.SelectedIndex > 0;
+        }
+
         private void BindProjects()
         {
             ctlProjectContext.ContextKey = null;
