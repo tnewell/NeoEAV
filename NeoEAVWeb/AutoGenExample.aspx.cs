@@ -41,10 +41,6 @@ namespace NeoEAVWeb
 
         private void BindProjects()
         {
-            ctlProjectContext.ContextKey = null;
-
-            myContextController.ActiveProject = null;
-
             List<string> projects = myContextController.Projects.Select(it => it.Name).ToList();
 
             if (projects.Any())
@@ -57,10 +53,6 @@ namespace NeoEAVWeb
 
         private void BindSubjects()
         {
-            ctlSubjectContext.ContextKey = null;
-            
-            myContextController.ActiveSubject = null;
-
             List<string> members = myContextController.GetSubjectsForActiveProject().Select(it => it.MemberID).ToList();
 
             if (members.Any())
@@ -73,10 +65,6 @@ namespace NeoEAVWeb
 
         private void BindContainers()
         {
-            ctlContainerContext.ContextKey = null;
-            
-            myContextController.ActiveContainer = null;
-
             List<string> members = myContextController.GetContainersForActiveProject().Select(it => it.Name).ToList();
 
             if (members.Any())
@@ -89,10 +77,11 @@ namespace NeoEAVWeb
 
         protected void ctlProjects_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ctlProjectContext.ContextKey = ctlProjects.SelectedValue;
-            ctlProjectContext.DataBind();
-
             myContextController.ActiveProject = ctlProjects.SelectedValue;
+
+            ctlProjectContext.ContextKey = ctlProjects.SelectedValue;
+
+            ctlProjectContext.DataBind();
 
             BindSubjects();
             BindContainers();
@@ -100,18 +89,20 @@ namespace NeoEAVWeb
 
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
+            myContextController.ActiveSubject = ctlSubjects.SelectedValue;
+
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
-            ctlProjectContext.DataBind();
             
-            myContextController.ActiveSubject = ctlSubjects.SelectedValue;            
+            ctlProjectContext.DataBind();
         }
 
         protected void ctlContainers_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ctlContainerContext.ContextKey = ctlContainers.SelectedValue;
-            ctlProjectContext.DataBind();
-            
             myContextController.ActiveContainer = ctlContainers.SelectedValue;
+            
+            ctlContainerContext.ContextKey = ctlContainers.SelectedValue;
+            
+            ctlProjectContext.DataBind();            
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)

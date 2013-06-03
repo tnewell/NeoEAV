@@ -194,8 +194,6 @@ namespace NeoEAV.Web.UI
 
         public void Save(Control contextControl)
         {
-            //ContextControlSet set = new ContextControlSet();
-
             FillContextSet(contextControl, ContextType.Project, null, null, null, null, null, null, null);
 
             context.SaveChanges();
@@ -612,18 +610,18 @@ namespace NeoEAV.Web.UI
                     Container container = DataItem as Container;
                     if (container != null)
                     {
+                        Control subjectControl = FindAncestor(this, UI.ContextType.Subject) as Control;
+                        if (subjectControl != null && DataBinder.GetPropertyValue(subjectControl, "DataSource") == null)
+                            subjectControl.DataBind();
+
                         if (container.IsRepeating)
                         {
-                            EAVInstanceContextRepeater rptr = new EAVInstanceContextRepeater();
-                            Controls.Add(rptr);
-                            rptr.DataBind();
+                            EAVInstanceContextRepeater instanceRepeater = new EAVInstanceContextRepeater();
+                            Controls.Add(instanceRepeater);
+                            instanceRepeater.DataBind();
                         }
                         else
                         {
-                            Control ctl = FindAncestor(this, UI.ContextType.Subject) as Control;
-                            if (ctl != null && DataBinder.GetPropertyValue(ctl, "DataSource") == null)
-                                ctl.DataBind();
-
                             Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
 
                             Controls.Add(new EAVAutoInstanceContextControl() { ContextKey = subject != null ? subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).FirstOrDefault() : null });

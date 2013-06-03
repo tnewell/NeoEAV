@@ -26,7 +26,7 @@
                             <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "MemberID") %>'></asp:Label>
                         </div>
                         <hr />
-                        <auto:EAVAutoContainerContextControl runat="server" ID="ctlContainerContext" />
+                        <auto:EAVAutoContainerContextControl runat="server" ID="ctlContainerContext" DynamicContextKey="true" />
                         <hr />
                     </eav:EAVSubjectContextControl>
                 </asp:Panel>
