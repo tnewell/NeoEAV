@@ -37,6 +37,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
     <Reference Include="System.Runtime.Serialization" />
@@ -157,6 +158,18 @@
     <Compile Include="Migrations\201304042218387_EAV_Test24.Designer.cs">
       <DependentUpon>201304042218387_EAV_Test24.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201306041925398_test.cs" />
+    <Compile Include="Migrations\201306041925398_test.Designer.cs">
+      <DependentUpon>201306041925398_test.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201306111540559_EAV_Test25.cs" />
+    <Compile Include="Migrations\201306111540559_EAV_Test25.Designer.cs">
+      <DependentUpon>201306111540559_EAV_Test25.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201306111546381_eav.cs" />
+    <Compile Include="Migrations\201306111546381_eav.Designer.cs">
+      <DependentUpon>201306111546381_eav.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -237,6 +250,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201304042218387_EAV_Test24.resx">
       <DependentUpon>201304042218387_EAV_Test24.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201306041925398_test.resx">
+      <DependentUpon>201306041925398_test.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201306111540559_EAV_Test25.resx">
+      <DependentUpon>201306111540559_EAV_Test25.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201306111546381_eav.resx">
+      <DependentUpon>201306111546381_eav.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

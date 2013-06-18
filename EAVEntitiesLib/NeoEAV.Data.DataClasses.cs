@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
+using System.Data.EntityClient;
 using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -24,6 +25,10 @@ namespace NeoEAV.Data.DataClasses
         public DbSet<ContainerInstance> ContainerInstances { get; set; }
         public DbSet<Value> Values { get; set; }
         public DbSet<DataType> DataTypes { get; set; }
+
+        public EAVEntityContext() { }
+
+        public EAVEntityContext(string connectionString) : base(connectionString) { }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -48,6 +53,9 @@ namespace NeoEAV.Data.DataClasses
         [Required, MaxLength(512)]
         public string Name { get; set; }
 
+        [Required, Column("Data_Name"), MaxLength(64)]
+        public string DataName { get; set; }
+
         public string Description { get; set; }
 
         public virtual ICollection<Container> Containers { get; set; }
@@ -69,17 +77,17 @@ namespace NeoEAV.Data.DataClasses
         [Required, MaxLength(512)]
         public string Name { get; set; }
 
-        [Required, MaxLength(512)]
+        [Required, Column("Display_Name"), MaxLength(512)]
         public string DisplayName { get; set; }
+
+        [Required, Column("Data_Name"), MaxLength(64)]
+        public string DataName { get; set; }
 
         [Required]
         public int Sequence { get; set; }
 
         [Required, Column("Is_Repeating")]
         public bool IsRepeating { get; set; }
-
-        [Required, Column("Has_Fixed_Instances")]
-        public bool HasFixedInstances { get; set; }
 
         [Required, Column("Project_ID")]
         public int ProjectID { get; set; }
@@ -115,6 +123,9 @@ namespace NeoEAV.Data.DataClasses
 
         [Required, Column("Display_Name"), MaxLength(512)]
         public string DisplayName { get; set; }
+
+        [Required, Column("Data_Name"), MaxLength(64)]
+        public string DataName { get; set; }
 
         [Required]
         public int Sequence { get; set; }
@@ -286,6 +297,26 @@ namespace NeoEAV.Data.DataClasses
 
         public Value()
         {
+        }
+
+        [NotMapped]
+        public object ObjectValue
+        {
+            get
+            {
+                if (Attribute == null)
+                    return (null);
+
+                switch (Attribute.DataType.DataTypeID)
+                {
+                    case EAVDataType.Boolean: return(BooleanValue);
+                    case EAVDataType.DateTime: return (DateTimeValue);
+                    case EAVDataType.Float: return (FloatValue);
+                    case EAVDataType.Integer: return (IntegerValue);
+                    case EAVDataType.String: return (StringValue);
+                    default: return (null);
+                }
+            }
         }
 
         [NotMapped]
