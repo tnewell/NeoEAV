@@ -170,6 +170,14 @@
     <Compile Include="Migrations\201306111546381_eav.Designer.cs">
       <DependentUpon>201306111546381_eav.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201306190214001_test1.cs" />
+    <Compile Include="Migrations\201306190214001_test1.Designer.cs">
+      <DependentUpon>201306190214001_test1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201306190215204_test2.cs" />
+    <Compile Include="Migrations\201306190215204_test2.Designer.cs">
+      <DependentUpon>201306190215204_test2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -259,6 +267,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201306111546381_eav.resx">
       <DependentUpon>201306111546381_eav.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201306190214001_test1.resx">
+      <DependentUpon>201306190214001_test1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201306190215204_test2.resx">
+      <DependentUpon>201306190215204_test2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

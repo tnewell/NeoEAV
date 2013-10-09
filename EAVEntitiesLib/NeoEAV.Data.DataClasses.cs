@@ -24,6 +24,7 @@ namespace NeoEAV.Data.DataClasses
         public DbSet<Unit> Units { get; set; }
         public DbSet<ContainerInstance> ContainerInstances { get; set; }
         public DbSet<Value> Values { get; set; }
+        public DbSet<Value2> OtherValues { get; set; }
         public DbSet<DataType> DataTypes { get; set; }
 
         public EAVEntityContext() { }
@@ -153,11 +154,14 @@ namespace NeoEAV.Data.DataClasses
 
         public virtual ICollection<Value> Values { get; set; }
 
+        public virtual ICollection<Value2> OtherValues { get; set; }
+
         public virtual ICollection<Unit> Units { get; set; }
 
         public Attribute()
         {
             Values = new List<Value>();
+            OtherValues = new List<Value2>();
             Units = new List<Unit>();
         }
 
@@ -269,10 +273,13 @@ namespace NeoEAV.Data.DataClasses
 
         public virtual ICollection<Value> Values { get; set; }
 
+        public virtual ICollection<Value2> OtherValues { get; set; }
+
         public ContainerInstance()
         {
             ChildContainerInstances = new List<ContainerInstance>();
             Values = new List<Value>();
+            OtherValues = new List<Value2>();
         }
     }
 
@@ -335,6 +342,65 @@ namespace NeoEAV.Data.DataClasses
         public String StringValue { get { return (RawValue); } }
     }
 
+    [Serializable]
+    public class Value2
+    {
+        [Required, Column("Raw_Value")]
+        public string RawValue { get; set; }
+
+        [MaxLength(8)]
+        public string Units { get; set; }
+
+        [Key, Column("Container_Instance_ID", Order = 0)]
+        public int ContainerInstanceID { get; set; }
+        [ForeignKey("ContainerInstanceID")]
+        public virtual ContainerInstance ContainerInstance { get; set; }
+
+        [Key, Column("Attribute_ID", Order = 1)]
+        public int AttributeID { get; set; }
+        [ForeignKey("AttributeID")]
+        public virtual Attribute Attribute { get; set; }
+
+        public Value2()
+        {
+        }
+
+        [Column("Boolean_Value")]
+        public Boolean? BooleanValue { get; set; }
+
+        [Column("DateTime_Value")]
+        public DateTime? DateTimeValue { get; set; }
+
+        [Column("Float_Value")]
+        public Single? FloatValue { get; set; }
+
+        [Column("Integer_Value")]
+        public Int32? IntegerValue { get; set; }
+
+        [NotMapped]
+        public String StringValue { get { return (RawValue); } set { RawValue = value; } }
+
+        [NotMapped]
+        public object ObjectValue
+        {
+            get
+            {
+                if (Attribute == null)
+                    return (null);
+
+                switch (Attribute.DataType.DataTypeID)
+                {
+                    case EAVDataType.Boolean: return (BooleanValue);
+                    case EAVDataType.DateTime: return (DateTimeValue);
+                    case EAVDataType.Float: return (FloatValue);
+                    case EAVDataType.Integer: return (IntegerValue);
+                    case EAVDataType.String: return (StringValue);
+                    default: return (null);
+                }
+            }
+        }
+    }
+
     public enum EAVDataType { Boolean = 1, DateTime = 2, Float = 3, Integer = 4, String = 5 }
 
     public class DataType
@@ -351,5 +417,27 @@ namespace NeoEAV.Data.DataClasses
         {
             Attributes = new List<Attribute>();
         }
+    }
+}
+
+// TODO: Eventually these need to be in their own class file
+namespace NeoEAV.Objects
+{
+    public enum ContextType { Unknown = 0, Project = 1, Subject = 2, Container = 3, Instance = 4, Attribute = 5, Value = 6 }
+
+    [Flags]
+    public enum BindingType { Unknown = 0, Data = 1, Metadata = 2 }
+
+    // TODO: Move IDataItemContainer here?
+    public interface IEAVContextControl
+    {
+        // TODO: Turn this into DataParent and MetadataParent
+        IEAVContextControl ParentContextControl { get; }
+
+        ContextType ContextType { get; }
+
+        string ContextKey { get; set; }
+
+        BindingType BindingType { get; }
     }
 }

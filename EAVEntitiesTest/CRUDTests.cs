@@ -24,7 +24,7 @@ namespace EAVEntitiesTest
 
             using (EAVEntityContext ctx = new EAVEntityContext())
             {
-                Project p = new Project() { Name = tmpProjectName };
+                Project p = new Project() { Name = tmpProjectName, DataName = tmpProjectName };
 
                 ctx.Projects.Add(p);
                 ctx.SaveChanges();
@@ -72,7 +72,7 @@ namespace EAVEntitiesTest
 
             using (EAVEntityContext ctx = new EAVEntityContext())
             {
-                Container c = new Container() { Name = tmpContainerName, DisplayName = tmpContainerName, Project = new Project() { Name = tmpProjectName } };
+                Container c = new Container() { Name = tmpContainerName, DisplayName = tmpContainerName, DataName = tmpContainerName, Project = new Project() { Name = tmpProjectName, DataName = tmpProjectName } };
 
                 ctx.Containers.Add(c);
                 ctx.SaveChanges();
@@ -129,12 +129,14 @@ namespace EAVEntitiesTest
                 {
                     Name = tmpAttributeName,
                     DisplayName = tmpAttributeName,
+                    DataName = tmpAttributeName,
                     DataType = ctx.DataTypes.Single(it => it.Name == "Integer"),
                     Container = new Container()
                     {
                         Name = tmpContainerName,
                         DisplayName = tmpContainerName,
-                        Project = new Project() { Name = tmpProjectName }
+                        DataName = tmpContainerName,
+                        Project = new Project() { Name = tmpProjectName, DataName = tmpProjectName }
                     },
                     Term = new Term() { Name = tmpTermName }
                 };
@@ -191,7 +193,7 @@ namespace EAVEntitiesTest
 
             using (EAVEntityContext ctx = new EAVEntityContext())
             {
-                Subject s = new Subject() { MemberID = tmpSubjectName, Project = new Project() { Name = tmpProjectName }, Entity = new Entity() { Name = tmpEntityName } };
+                Subject s = new Subject() { MemberID = tmpSubjectName, Project = new Project() { Name = tmpProjectName, DataName = tmpProjectName }, Entity = new Entity() { Name = tmpEntityName } };
 
                 ctx.Subjects.Add(s);
                 ctx.SaveChanges();
@@ -246,8 +248,8 @@ namespace EAVEntitiesTest
 
             using (EAVEntityContext ctx = new EAVEntityContext())
             {
-                Project p = new Project() { Name = tmpProjectName };
-                ContainerInstance ci = new ContainerInstance() { Subject = new Subject() { MemberID = tmpSubjectName, Entity = new Entity() { Name = tmpEntityName }, Project = p }, Container = new Container() { Name = tmpContainerName, DisplayName = tmpContainerName, Project = p } };
+                Project p = new Project() { Name = tmpProjectName, DataName = tmpProjectName };
+                ContainerInstance ci = new ContainerInstance() { Subject = new Subject() { MemberID = tmpSubjectName, Entity = new Entity() { Name = tmpEntityName }, Project = p }, Container = new Container() { Name = tmpContainerName, DisplayName = tmpContainerName, DataName = tmpContainerName, Project = p } };
 
                 ctx.ContainerInstances.Add(ci);
                 ctx.SaveChanges();
@@ -309,10 +311,10 @@ namespace EAVEntitiesTest
 
             using (EAVEntityContext ctx = new EAVEntityContext())
             {
-                Project p = new Project() { Name = tmpProjectName };
-                Container c = new Container() { Name = tmpContainerName, DisplayName = tmpContainerName, Project = p };
+                Project p = new Project() { Name = tmpProjectName, DataName = tmpProjectName };
+                Container c = new Container() { Name = tmpContainerName, DisplayName = tmpContainerName, DataName = tmpContainerName, Project = p };
                 ContainerInstance ci = new ContainerInstance() { Subject = new Subject() { MemberID = tmpSubjectName, Entity = new Entity() { Name = tmpEntityName }, Project = p }, Container = c };
-                Value v = new Value() { ContainerInstance = ci, Attribute = new Attribute() { Name = tmpAttributeName, DisplayName = tmpAttributeName, DataType = ctx.DataTypes.Single(it => it.Name == "Integer"), Term = new Term() { Name = tmpTermName } }, RawValue = "Raw Value" };
+                Value v = new Value() { ContainerInstance = ci, Attribute = new Attribute() { Name = tmpAttributeName, DisplayName = tmpAttributeName, DataName = tmpAttributeName, DataType = ctx.DataTypes.Single(it => it.Name == "Integer"), Term = new Term() { Name = tmpTermName } }, RawValue = "Raw Value" };
 
                 ctx.Values.Add(v);
                 ctx.SaveChanges();

@@ -7,6 +7,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 
 using NeoEAV.Data.DataClasses;
+using NeoEAV.Objects;
 
 using Attribute = NeoEAV.Data.DataClasses.Attribute;
 using Container = NeoEAV.Data.DataClasses.Container;
@@ -200,24 +201,6 @@ namespace NeoEAV.Web.UI
         }
     }
 
-    public enum ContextType { Unknown = 0, Project = 1, Subject = 2, Container = 3, Instance = 4, Attribute = 5, Value = 6 }
-
-    [Flags]
-    public enum BindingType { Unknown = 0, Data = 1, Metadata = 2 }
-
-    // TODO: Move IDataItemContainer here?
-    public interface IEAVContextControl
-    {
-        // TODO: Turn this into DataParent and MetadataParent
-        IEAVContextControl ParentContextControl { get; }
-
-        ContextType ContextType { get; }
-        
-        string ContextKey { get; set; }
-        
-        BindingType BindingType { get; }
-    }
-
     public abstract class EAVContextControl : Control, IEAVContextControl, IDataItemContainer
     {
         public static IEAVContextControl FindAncestor(Control control, ContextType ancestorContextType)
@@ -295,7 +278,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return(ContextKeyChanged ? UI.BindingType.Metadata | UI.BindingType.Data : UI.BindingType.Unknown);
+                return(ContextKeyChanged ? BindingType.Metadata | BindingType.Data : BindingType.Unknown);
             }
         }
 
@@ -317,7 +300,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVSubjectContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, UI.ContextType.Project)); } }
+        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextType.Project)); } }
 
         public override ContextType ContextType { get { return (ContextType.Subject); } }
 
@@ -325,7 +308,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return (ParentContextControl.BindingType | (ContextKeyChanged ? UI.BindingType.Data : UI.BindingType.Unknown));
+                return (ParentContextControl.BindingType | (ContextKeyChanged ? BindingType.Data : BindingType.Unknown));
             }
         }
 
@@ -341,10 +324,10 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
+            Project project = FindAncestorDataItem<Project>(this, ContextType.Project);
             DataSource = project != null ? project.Subjects : null;
 
-            if (ParentContextControl.BindingType != UI.BindingType.Unknown && DynamicContextKey)
+            if (ParentContextControl.BindingType != BindingType.Unknown && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -353,7 +336,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVContainerContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, UI.ContextType.Instance) ?? FindAncestor(this, UI.ContextType.Subject)); } }
+        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextType.Instance) ?? FindAncestor(this, ContextType.Subject)); } }
 
         public override ContextType ContextType { get { return (ContextType.Container); } }
 
@@ -361,7 +344,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return (ParentContextControl.BindingType | (ContextKeyChanged ? UI.BindingType.Metadata : UI.BindingType.Unknown));
+                return (ParentContextControl.BindingType | (ContextKeyChanged ? BindingType.Metadata : BindingType.Unknown));
             }
         }
 
@@ -377,7 +360,7 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            Project project = FindAncestorDataItem<Project>(this, UI.ContextType.Project);
+            Project project = FindAncestorDataItem<Project>(this, ContextType.Project);
             DataSource = project != null ? project.Containers : null;
 
             IEnumerable<Container> dataSource = DataSource as IEnumerable<Container>;
@@ -388,7 +371,7 @@ namespace NeoEAV.Web.UI
                 DataSource = dataSource.Where(it => it.ParentContainer == parentContainer);
             }
 
-            if (ParentContextControl.BindingType == UI.BindingType.Metadata && DynamicContextKey)
+            if (ParentContextControl.BindingType == BindingType.Metadata && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -397,7 +380,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVInstanceContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, UI.ContextType.Container)); } }
+        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextType.Container)); } }
 
         public override ContextType ContextType { get { return (ContextType.Instance); } }
 
@@ -405,7 +388,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return (ParentContextControl.BindingType | (ContextKeyChanged ? UI.BindingType.Data : UI.BindingType.Unknown));
+                return (ParentContextControl.BindingType | (ContextKeyChanged ? BindingType.Data : BindingType.Unknown));
             }
         }
 
@@ -421,7 +404,7 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
+            Subject subject = FindAncestorDataItem<Subject>(this, ContextType.Subject);
             DataSource = subject != null ? subject.ContainerInstances : null;
 
             IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
@@ -433,9 +416,9 @@ namespace NeoEAV.Web.UI
                 DataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
             }
 
-            if (ParentContextControl.BindingType != UI.BindingType.Unknown && DynamicContextKey)
+            if (ParentContextControl.BindingType != BindingType.Unknown && DynamicContextKey)
             {
-                Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
+                Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
 
                 if (subject != null && container != null && !container.IsRepeating)
                     ContextKey = subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).SingleOrDefault();
@@ -449,7 +432,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVAttributeContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, UI.ContextType.Instance)); } }
+        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextType.Instance)); } }
 
         public override ContextType ContextType { get { return (ContextType.Attribute); } }
 
@@ -457,7 +440,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return (ParentContextControl.BindingType | (ContextKeyChanged ? UI.BindingType.Metadata : UI.BindingType.Unknown));
+                return (ParentContextControl.BindingType | (ContextKeyChanged ? BindingType.Metadata : BindingType.Unknown));
             }
         }
 
@@ -473,10 +456,10 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
+            Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
             DataSource = container != null ? container.Attributes : null;
 
-            if (ParentContextControl.BindingType == UI.BindingType.Metadata && DynamicContextKey)
+            if (ParentContextControl.BindingType == BindingType.Metadata && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -485,7 +468,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVTextBox : TextBox, IEAVContextControl
     {
-        public IEAVContextControl ParentContextControl { get { return (EAVContextControl.FindAncestor(this, UI.ContextType.Attribute)); } }
+        public IEAVContextControl ParentContextControl { get { return (EAVContextControl.FindAncestor(this, ContextType.Attribute)); } }
 
         public string ContextKey { get { return (Text); } set { Text = value; } }
 
@@ -610,7 +593,7 @@ namespace NeoEAV.Web.UI
                     Container container = DataItem as Container;
                     if (container != null)
                     {
-                        Control subjectControl = FindAncestor(this, UI.ContextType.Subject) as Control;
+                        Control subjectControl = FindAncestor(this, ContextType.Subject) as Control;
                         if (subjectControl != null && DataBinder.GetPropertyValue(subjectControl, "DataSource") == null)
                             subjectControl.DataBind();
 
@@ -622,7 +605,7 @@ namespace NeoEAV.Web.UI
                         }
                         else
                         {
-                            Subject subject = FindAncestorDataItem<Subject>(this, UI.ContextType.Subject);
+                            Subject subject = FindAncestorDataItem<Subject>(this, ContextType.Subject);
 
                             Controls.Add(new EAVAutoInstanceContextControl() { ContextKey = subject != null ? subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).FirstOrDefault() : null });
                         }
@@ -646,7 +629,7 @@ namespace NeoEAV.Web.UI
                 if (DataSource == null)
                     DataBind();
 
-                Container container = FindAncestorDataItem<Container>(this, UI.ContextType.Container);
+                Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
                 if (container != null)
                 {
                     foreach (Attribute attribute in container.Attributes)
