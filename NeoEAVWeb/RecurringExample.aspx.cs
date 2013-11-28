@@ -17,7 +17,7 @@ namespace NeoEAVWeb
         {
             base.OnInitComplete(e);
 
-            ctlProjectContext.DataSource = myContextController.Projects;
+            //ctlProjectContext.DataSource = myContextController.Projects;
         }
 
         protected void Page_Load(object sender, EventArgs e)
@@ -30,6 +30,10 @@ namespace NeoEAVWeb
             if (!IsPostBack)
             {
                 BindProjects();
+            }
+            else
+            {
+                ctlProjectContext.DataSource = myContextController.Projects;
             }
         }
 
