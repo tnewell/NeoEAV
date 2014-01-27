@@ -440,4 +440,9 @@ namespace NeoEAV.Objects
 
         BindingType BindingType { get; }
     }
+
+    public interface IEAVValueControl
+    {
+        string RawValue { get; set; }
+    }
 }

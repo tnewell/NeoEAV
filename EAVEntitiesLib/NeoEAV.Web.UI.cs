@@ -60,6 +60,34 @@ namespace NeoEAV.Web.UI
             return (value);
         }
 
+        private void UpdateValue(Control control, ContainerInstance dbInstance, Attribute dbAttribute)
+        {
+            IEAVValueControl valueControl = control as IEAVValueControl;
+
+            if (valueControl != null)
+            {
+                Value value = FindValue(dbAttribute, dbInstance, false);
+
+                if (value != null)
+                {
+                    if (String.IsNullOrWhiteSpace(valueControl.RawValue))
+                        context.Values.Remove(value);
+                    else if (value.RawValue != valueControl.RawValue)
+                        value.RawValue = valueControl.RawValue;
+                }
+                else if (!String.IsNullOrWhiteSpace(valueControl.RawValue))
+                {
+                    value = FindValue(dbAttribute, dbInstance, true);
+                    value.RawValue = valueControl.RawValue;
+                }
+            }
+            else
+            {
+                foreach (Control child in control.Controls)
+                    UpdateValue(child, dbInstance, dbAttribute);
+            }
+        }
+
         private void FillContextSet(Control control, ContextType contextType, Container parentContainer, ContainerInstance parentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
         {
             if (control is IEAVContextControl && ((IEAVContextControl) control).ContextType == contextType)
@@ -126,24 +154,7 @@ namespace NeoEAV.Web.UI
 
                         foreach (Control child in control.Controls)
                         {
-                            FillContextSet(child, ContextType.Value, parentContainer, parentInstance, dbProject, dbSubject, dbContainer, dbInstance, attribute);
-                        }
-                        break;
-                    case ContextType.Value:
-                        IEAVContextControl valueControl = control as IEAVContextControl;
-                        Value value = FindValue(dbAttribute, dbInstance, false);
-
-                        if (value != null)
-                        {
-                            if (String.IsNullOrWhiteSpace(valueControl.ContextKey))
-                                context.Values.Remove(value);
-                            else if (value.RawValue != valueControl.ContextKey)
-                                value.RawValue = valueControl.ContextKey;
-                        }
-                        else if (!String.IsNullOrWhiteSpace(valueControl.ContextKey))
-                        {
-                            value = FindValue(dbAttribute, dbInstance, true);
-                            value.RawValue = valueControl.ContextKey;
+                            UpdateValue(child, dbInstance, attribute);
                         }
                         break;
                 }
@@ -466,21 +477,9 @@ namespace NeoEAV.Web.UI
         }
     }
 
-    public partial class EAVTextBox : TextBox, IEAVContextControl
+    public partial class EAVTextBox : TextBox, IEAVValueControl
     {
-        public IEAVContextControl ParentContextControl { get { return (EAVContextControl.FindAncestor(this, ContextType.Attribute)); } }
-
-        public string ContextKey { get { return (Text); } set { Text = value; } }
-
-        public ContextType ContextType { get { return (ContextType.Value); } }
-
-        public BindingType BindingType
-        {
-            get
-            {
-                return(ParentContextControl.BindingType);
-            }
-        }
+        public string RawValue { get { return (Text); } set { Text = value; } }
 
         public override bool Enabled
         {
@@ -506,7 +505,7 @@ namespace NeoEAV.Web.UI
                 value = instance.Values.SingleOrDefault(it => it.Attribute == attribute);
             }
 
-            ContextKey = value != null ? value.RawValue : null;
+            RawValue = value != null ? value.RawValue : null;
 
             base.OnDataBinding(e);
         }
