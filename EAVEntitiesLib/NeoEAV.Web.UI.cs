@@ -303,8 +303,17 @@ namespace NeoEAV.Web.UI
             }
         }
 
+        private void RefreshDataSource()
+        {
+        }
+
         protected override void OnDataBinding(EventArgs e)
         {
+            RefreshDataSource();
+
+            if (ParentContextControl != null && ParentContextControl.BindingType != BindingType.Unknown && DynamicContextKey)
+                ContextKey = null;
+
             base.OnDataBinding(e);
         }
     }
@@ -333,12 +342,18 @@ namespace NeoEAV.Web.UI
             }
         }
 
-        protected override void OnDataBinding(EventArgs e)
+        private void RefreshDataSource()
         {
             Project project = FindAncestorDataItem<Project>(this, ContextType.Project);
+            
             DataSource = project != null ? project.Subjects : null;
+        }
 
-            if (ParentContextControl.BindingType != BindingType.Unknown && DynamicContextKey)
+        protected override void OnDataBinding(EventArgs e)
+        {
+            RefreshDataSource();
+
+            if (ParentContextControl != null && ParentContextControl.BindingType != BindingType.Unknown && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -369,20 +384,19 @@ namespace NeoEAV.Web.UI
             }
         }
 
-        protected override void OnDataBinding(EventArgs e)
+        private void RefreshDataSource()
         {
             Project project = FindAncestorDataItem<Project>(this, ContextType.Project);
-            DataSource = project != null ? project.Containers : null;
+            Container parentContainer = FindAncestorDataItem<Container>(this, ContextType.Container);
 
-            IEnumerable<Container> dataSource = DataSource as IEnumerable<Container>;
-            if (dataSource != null)
-            {
-                Container parentContainer = FindAncestorDataItem<Container>(this, ContextType.Container);
+            DataSource = project != null ? project.Containers.Where(it => it.ParentContainer == parentContainer) : null;
+        }
 
-                DataSource = dataSource.Where(it => it.ParentContainer == parentContainer);
-            }
+        protected override void OnDataBinding(EventArgs e)
+        {
+            RefreshDataSource();
 
-            if (ParentContextControl.BindingType == BindingType.Metadata && DynamicContextKey)
+            if (ParentContextControl != null && ParentContextControl.BindingType == BindingType.Metadata && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -413,29 +427,21 @@ namespace NeoEAV.Web.UI
             }
         }
 
-        protected override void OnDataBinding(EventArgs e)
+        private void RefreshDataSource()
         {
             Subject subject = FindAncestorDataItem<Subject>(this, ContextType.Subject);
-            DataSource = subject != null ? subject.ContainerInstances : null;
+            Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
+            ContainerInstance parentInstance = FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
+            
+            DataSource = subject != null ? subject.ContainerInstances.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance) : null;
+        }
 
-            IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
-            if (dataSource != null)
-            {
-                Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
-                ContainerInstance parentInstance = FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
+        protected override void OnDataBinding(EventArgs e)
+        {
+            RefreshDataSource();
 
-                DataSource = dataSource.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
-            }
-
-            if (ParentContextControl.BindingType != BindingType.Unknown && DynamicContextKey)
-            {
-                Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
-
-                if (subject != null && container != null && !container.IsRepeating)
-                    ContextKey = subject.ContainerInstances.Where(it => it.Container == container).Select(it => it.RepeatInstance.ToString()).SingleOrDefault();
-                else
-                    ContextKey = null;
-            }
+            if (ParentContextControl != null && ParentContextControl.BindingType != BindingType.Unknown && DynamicContextKey)
+                ContextKey = null;
 
             base.OnDataBinding(e);
         }
@@ -465,12 +471,18 @@ namespace NeoEAV.Web.UI
             }
         }
 
-        protected override void OnDataBinding(EventArgs e)
+        private void RefreshDataSource()
         {
             Container container = FindAncestorDataItem<Container>(this, ContextType.Container);
+        
             DataSource = container != null ? container.Attributes : null;
+        }
 
-            if (ParentContextControl.BindingType == BindingType.Metadata && DynamicContextKey)
+        protected override void OnDataBinding(EventArgs e)
+        {
+            RefreshDataSource();
+
+            if (ParentContextControl != null && ParentContextControl.BindingType == BindingType.Metadata && DynamicContextKey)
                 ContextKey = null;
 
             base.OnDataBinding(e);
@@ -495,17 +507,10 @@ namespace NeoEAV.Web.UI
 
         protected override void OnDataBinding(EventArgs e)
         {
-            Value value = null;
-
             ContainerInstance instance = EAVContextControl.FindAncestorDataItem<ContainerInstance>(this, ContextType.Instance);
-            if (instance != null)
-            {
-                Attribute attribute = EAVContextControl.FindAncestorDataItem<Attribute>(this, ContextType.Attribute);
+            Attribute attribute = EAVContextControl.FindAncestorDataItem<Attribute>(this, ContextType.Attribute);
 
-                value = instance.Values.SingleOrDefault(it => it.Attribute == attribute);
-            }
-
-            RawValue = value != null ? value.RawValue : null;
+            RawValue = instance != null ? instance.Values.Where(it => it.Attribute == attribute).Select(it => it.RawValue).SingleOrDefault() : null;
 
             base.OnDataBinding(e);
         }

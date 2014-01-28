@@ -25,7 +25,7 @@
                         </div>
                         <eav:EAVContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="Test Root Container 1">
                             <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "DisplayName") %>'>
-                                <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" DynamicContextKey="true">
+                                <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" ContextKey="0">
                                     <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                         Instance:
                                         <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "RepeatInstance") %>'></asp:Label>
