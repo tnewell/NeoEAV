@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
-using System.Data.EntityClient;
 using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -423,10 +422,10 @@ namespace NeoEAV.Data.DataClasses
 // TODO: Eventually these need to be in their own class file
 namespace NeoEAV.Objects
 {
-    public enum ContextType { Unknown = 0, Project = 1, Subject = 2, Container = 3, Instance = 4, Attribute = 5, Value = 6 }
+    public enum ContextControlType { Unknown, Project, Subject, Container, Instance, Attribute }
 
     [Flags]
-    public enum BindingType { Unknown = 0, Data = 1, Metadata = 2 }
+    public enum ContextType { Unknown = 0, Data = 1, Metadata = 2 }
 
     // TODO: Move IDataItemContainer here?
     public interface IEAVContextControl
@@ -434,11 +433,12 @@ namespace NeoEAV.Objects
         // TODO: Turn this into DataParent and MetadataParent
         IEAVContextControl ParentContextControl { get; }
 
-        ContextType ContextType { get; }
+        ContextControlType ContextControlType { get; }
 
         string ContextKey { get; set; }
 
-        BindingType BindingType { get; }
+        ContextType ContextType { get; }
+        ContextType BindingType { get; }
     }
 
     public interface IEAVValueControl

@@ -17,7 +17,7 @@ namespace NeoEAVWeb
         {
             base.OnInitComplete(e);
 
-            //ctlProjectContext.DataSource = myContextController.Projects;
+            ctlProjectContext.DataSource = myContextController.Projects;
         }
 
         protected void Page_Load(object sender, EventArgs e)
@@ -31,10 +31,6 @@ namespace NeoEAVWeb
             {
                 BindProjects();
             }
-            else
-            {
-                ctlProjectContext.DataSource = myContextController.Projects;
-            }
         }
 
         protected override void OnPreRender(EventArgs e)
@@ -46,7 +42,7 @@ namespace NeoEAVWeb
 
         private void BindProjects()
         {
-            ctlProjectContext.DataSource = myContextController.Projects;
+            //ctlProjectContext.DataSource = myContextController.Projects;
             ctlProjectContext.DataBind();
 
             BindSubjects();
@@ -77,8 +73,6 @@ namespace NeoEAVWeb
             ctlInstances.DataBind();
             ctlInstances.Enabled = ctlInstances.Items.Count > 0;
 
-            Debug.WriteLine(String.Format("BindInstances {{ ActiveInstance = '{0}', InstanceContext = '{1}' }}", myContextController.ActiveContainerInstance, ctlInstanceContext.ContextKey));
-
             if (myContextController.ActiveContainerInstance != ctlInstanceContext.ContextKey)
                 myContextController.ActiveContainerInstance = ctlInstanceContext.ContextKey;
             
@@ -91,7 +85,7 @@ namespace NeoEAVWeb
 
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
             
-            ctlProjectContext.DataBind();
+            //ctlProjectContext.DataBind();
 
             BindInstances();
         }
@@ -102,7 +96,7 @@ namespace NeoEAVWeb
             
             ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
 
-            ctlProjectContext.DataBind();
+            //ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)

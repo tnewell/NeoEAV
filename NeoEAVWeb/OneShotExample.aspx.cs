@@ -34,7 +34,7 @@ namespace NeoEAVWeb
 
         private void BindProjects()
         {
-            ctlProjectContext.DataSource = myContextController.Projects;
+            //ctlProjectContext.DataSource = myContextController.Projects;
             ctlProjectContext.DataBind();
 
             BindSubjects();
@@ -58,7 +58,7 @@ namespace NeoEAVWeb
             
             ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
             
-            ctlProjectContext.DataBind();
+            //ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
