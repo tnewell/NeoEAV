@@ -427,11 +427,11 @@ namespace NeoEAV.Objects
     [Flags]
     public enum ContextType { Unknown = 0, Data = 1, Metadata = 2 }
 
-    // TODO: Move IDataItemContainer here?
     public interface IEAVContextControl
     {
-        // TODO: Turn this into DataParent and MetadataParent
-        IEAVContextControl ParentContextControl { get; }
+        IEAVContextControl ContextParent { get; }
+
+        IEnumerable<IEAVContextControl> ContextChildren { get; }
 
         ContextControlType ContextControlType { get; }
 
@@ -439,6 +439,11 @@ namespace NeoEAV.Objects
 
         ContextType ContextType { get; }
         ContextType BindingType { get; }
+    }
+
+    public interface IEAVValueControlContainer
+    {
+        IEnumerable<IEAVValueControl> ValueControls { get; }
     }
 
     public interface IEAVValueControl

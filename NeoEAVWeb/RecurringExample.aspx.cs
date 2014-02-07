@@ -42,7 +42,6 @@ namespace NeoEAVWeb
 
         private void BindProjects()
         {
-            //ctlProjectContext.DataSource = myContextController.Projects;
             ctlProjectContext.DataBind();
 
             BindSubjects();
@@ -82,10 +81,11 @@ namespace NeoEAVWeb
         protected void ctlSubjects_SelectedIndexChanged(object sender, EventArgs e)
         {
             myContextController.ActiveSubject = ctlSubjects.SelectedValue;
+            myContextController.ActiveContainerInstance = null;
 
-            ctlSubjectContext.ContextKey = ctlSubjects.SelectedValue;
+            ctlSubjectContext.ContextKey = myContextController.ActiveSubject;
             
-            //ctlProjectContext.DataBind();
+            ctlProjectContext.DataBind();
 
             BindInstances();
         }
@@ -94,14 +94,15 @@ namespace NeoEAVWeb
         {
             myContextController.ActiveContainerInstance = ctlInstances.SelectedValue;
             
-            ctlInstanceContext.ContextKey = ctlInstances.SelectedValue;
+            ctlInstanceContext.ContextKey = myContextController.ActiveContainerInstance;
 
-            //ctlProjectContext.DataBind();
+            ctlProjectContext.DataBind();
         }
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            myContextController.Save(this);
+            //myContextController.Save(this);
+            myContextController.Save2(ctlProjectContext);
 
             ctlProjectContext.DataBind();
 

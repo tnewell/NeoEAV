@@ -88,6 +88,27 @@ namespace NeoEAV.Web.UI
             }
         }
 
+        private void UpdateValue2(IEAVValueControl control, ContainerInstance dbInstance, Attribute dbAttribute)
+        {
+            if (control != null)
+            {
+                Value value = FindValue(dbAttribute, dbInstance, false);
+
+                if (value != null)
+                {
+                    if (String.IsNullOrWhiteSpace(control.RawValue))
+                        context.Values.Remove(value);
+                    else if (value.RawValue != control.RawValue)
+                        value.RawValue = control.RawValue;
+                }
+                else if (!String.IsNullOrWhiteSpace(control.RawValue))
+                {
+                    value = FindValue(dbAttribute, dbInstance, true);
+                    value.RawValue = control.RawValue;
+                }
+            }
+        }
+
         private void FillContextSet(Control control, ContextControlType contextType, Container parentContainer, ContainerInstance parentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
         {
             if (control is IEAVContextControl && ((IEAVContextControl) control).ContextControlType == contextType)
@@ -143,9 +164,8 @@ namespace NeoEAV.Web.UI
                         if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
                         {
                             context.ContainerInstances.Remove(instance);
-                            
-                            if (instanceControl != null)
-                                instanceControl.ContextKey = null;
+
+                            instanceControl.ContextKey = null;
                         }
                         break;
                     case ContextControlType.Attribute:
@@ -165,6 +185,65 @@ namespace NeoEAV.Web.UI
                 {
                     FillContextSet(child, contextType, parentContainer, parentInstance, dbProject, dbSubject, dbContainer, dbInstance, dbAttribute);
                 }
+            }
+        }
+
+        private void FillContextSet2(IEAVContextControl control, Container dbParentContainer, ContainerInstance dbParentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
+        {
+            // TODO: Do we need db items? Can we use DataItem property somehow?
+            switch (control.ContextControlType)
+            {
+                case ContextControlType.Project:
+                    Project project = context.Projects.SingleOrDefault(it => it.Name == control.ContextKey);
+
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        FillContextSet2(child, dbParentContainer, dbParentInstance, project, null, null, null, null);
+                    }
+                    break;
+                case ContextControlType.Subject:
+                    Subject subject = dbProject.Subjects.SingleOrDefault(it => it.MemberID == control.ContextKey);
+
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        FillContextSet2(child, dbParentContainer, dbParentInstance, dbProject, subject, null, null, null);
+                    }
+                    break;
+                case ContextControlType.Container:
+                    Container container = dbProject.Containers.SingleOrDefault(it => it.ParentContainer == dbParentContainer && it.Name == control.ContextKey);
+
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        FillContextSet2(child, dbParentContainer, dbParentInstance, dbProject, dbSubject, container, null, null);
+                    }
+                    break;
+                case ContextControlType.Instance:
+                    ContainerInstance instance = FindContainerInstance(dbSubject, dbContainer, dbParentInstance, control.ContextKey, true);
+
+                    if (String.IsNullOrWhiteSpace(control.ContextKey))
+                        control.ContextKey = instance.RepeatInstance.ToString();
+
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        bool isAttribute = child.ContextControlType == ContextControlType.Attribute;
+
+                        FillContextSet2(child, isAttribute ? dbParentContainer : dbContainer, isAttribute ? dbParentInstance : instance, dbProject, dbSubject, isAttribute ? dbContainer : null, isAttribute ? instance : null, null);
+                    }
+
+                    if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
+                    {
+                        context.ContainerInstances.Remove(instance);
+                        control.ContextKey = null;
+                    }
+                    break;
+                case ContextControlType.Attribute:
+                    Attribute attribute = dbContainer.Attributes.SingleOrDefault(it => it.Name == control.ContextKey);
+
+                    foreach (IEAVValueControl child in ((IEAVValueControlContainer)control).ValueControls)
+                    {
+                        UpdateValue2(child, dbInstance, attribute);
+                    }
+                    break;
             }
         }
 
@@ -210,6 +289,13 @@ namespace NeoEAV.Web.UI
 
             context.SaveChanges();
         }
+
+        public void Save2(IEAVContextControl contextControl)
+        {
+            FillContextSet2(contextControl, null, null, null, null, null, null, null);
+
+            context.SaveChanges();
+        }
     }
 
     public abstract class EAVContextControl : Control, IEAVContextControl, IDataItemContainer
@@ -245,7 +331,35 @@ namespace NeoEAV.Web.UI
             return (null);
         }
 
-        public abstract IEAVContextControl ParentContextControl { get; }
+        public abstract IEAVContextControl ContextParent { get; }
+
+        private void GetChildrenRecursive(Control ctl, IList<IEAVContextControl> children)
+        {
+            if (ctl is IEAVContextControl)
+            {
+                children.Add(ctl as IEAVContextControl);
+            }
+            else
+            {
+                foreach (Control child in ctl.Controls)
+                    GetChildrenRecursive(child, children);
+            }
+        }
+
+        public IEnumerable<IEAVContextControl> ContextChildren
+        {
+            get
+            {
+                List<IEAVContextControl> children = new List<IEAVContextControl>();
+
+                foreach (Control ctl in Controls)
+                {
+                    GetChildrenRecursive(ctl, children);
+                }
+
+                return (children);
+            }
+        }
 
         public abstract ContextControlType ContextControlType { get; }
 
@@ -253,25 +367,11 @@ namespace NeoEAV.Web.UI
 
         public abstract ContextType ContextType { get; }
 
-        public virtual ContextType BindingType
+        public ContextType BindingType
         {
             get
             {
-                return (myBind ? ContextType : ParentContextControl != null ? ParentContextControl.BindingType : ContextType.Unknown);
-            }
-        }
-
-        public virtual string ContextKey
-        {
-            get { return (ViewState["ContextKey"] as string); }
-            set
-            {
-                ViewState["ContextKey"] = value;
-
-                myBind = !inBind;
-
-                if (!inBind)
-                    DataBind();
+                return (myBind ? ContextType : ContextParent != null ? ContextParent.BindingType : ContextType.Unknown);
             }
         }
 
@@ -280,7 +380,7 @@ namespace NeoEAV.Web.UI
         public virtual int DisplayIndex { get { return (0); } }
 
         private object dataSource;
-        public virtual object DataSource
+        public object DataSource
         {
             get {return(dataSource);}
             set
@@ -291,7 +391,18 @@ namespace NeoEAV.Web.UI
             }
         }
 
-        public virtual bool DynamicContextKey { get; set; }
+        public string ContextKey
+        {
+            get { return (ViewState["ContextKey"] as string); }
+            set
+            {
+                ViewState["ContextKey"] = value;
+
+                myBind = !inBind;
+            }
+        }
+
+        public bool DynamicContextKey { get; set; }
 
         protected abstract void RefreshDataSource();
 
@@ -315,7 +426,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVProjectContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (null); } }
+        public override IEAVContextControl ContextParent { get { return (null); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Project); } }
 
@@ -338,7 +449,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVSubjectContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextControlType.Project)); } }
+        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Project)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Subject); } }
 
@@ -367,7 +478,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVContainerContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextControlType.Instance) ?? FindAncestor(this, ContextControlType.Subject)); } }
+        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Instance) ?? FindAncestor(this, ContextControlType.Subject)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Container); } }
 
@@ -397,7 +508,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVInstanceContextControl : EAVContextControl
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextControlType.Container)); } }
+        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Container)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Instance); } }
 
@@ -426,9 +537,9 @@ namespace NeoEAV.Web.UI
         }
     }
 
-    public partial class EAVAttributeContextControl : EAVContextControl
+    public partial class EAVAttributeContextControl : EAVContextControl, IEAVValueControlContainer
     {
-        public override IEAVContextControl ParentContextControl { get { return (FindAncestor(this, ContextControlType.Instance)); } }
+        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Instance)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Attribute); } }
 
@@ -452,6 +563,32 @@ namespace NeoEAV.Web.UI
             Container container = FindAncestorDataItem<Container>(this, ContextControlType.Container);
         
             DataSource = container != null ? container.Attributes : null;
+        }
+
+        private void GetChildrenRecursive(Control ctl, IList<IEAVValueControl> children)
+        {
+            if (ctl is IEAVValueControl)
+            {
+                children.Add(ctl as IEAVValueControl);
+            }
+            else
+            {
+                foreach (Control child in ctl.Controls)
+                    GetChildrenRecursive(child, children);
+            }
+        }
+
+        public IEnumerable<IEAVValueControl> ValueControls
+        {
+            get
+            {
+                List<IEAVValueControl> valueControls = new List<IEAVValueControl>();
+
+                foreach (Control child in Controls)
+                    GetChildrenRecursive(child, valueControls);
+
+                return (valueControls);
+            }
         }
     }
 
