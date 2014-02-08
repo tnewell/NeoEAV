@@ -84,6 +84,7 @@ namespace NeoEAVWeb
             myContextController.ActiveContainerInstance = null;
 
             ctlSubjectContext.ContextKey = myContextController.ActiveSubject;
+            ctlInstanceContext.ContextKey = myContextController.ActiveContainerInstance;
             
             ctlProjectContext.DataBind();
 
@@ -102,7 +103,7 @@ namespace NeoEAVWeb
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
             //myContextController.Save(this);
-            myContextController.Save2(ctlProjectContext);
+            myContextController.Save(ctlProjectContext);
 
             ctlProjectContext.DataBind();
 

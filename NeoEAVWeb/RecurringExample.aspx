@@ -19,14 +19,14 @@
             <div style="padding-top: 35px;">
                 <eav:EAVProjectContextControl runat="server" ID="ctlProjectContext" ContextKey="Test Project 3">
                     <asp:Panel runat="server" GroupingText='<%# DataBinder.Eval(Container.DataItem, "Description") %>'>
-                        <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext" DynamicContextKey="true">
+                        <eav:EAVSubjectContextControl runat="server" ID="ctlSubjectContext">
                             <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                 Subject:
                                 <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "MemberID") %>'></asp:Label>
                             </div>
                             <eav:EAVContainerContextControl runat="server" ID="ctlContainerContext" ContextKey="Test Root Container 3">
                                 <asp:Panel runat="server" GroupingText='<%# DataBinder.GetPropertyValue(Container.DataItem, "Name") %>'>
-                                    <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext" DynamicContextKey="true">
+                                    <eav:EAVInstanceContextControl runat="server" ID="ctlInstanceContext">
                                         <div style="margin: 3px; padding: 5px; background-color: #CCCCCC;">
                                             Instance:
                                             <asp:Label runat="server" Text='<%# DataBinder.Eval(Container.DataItem, "RepeatInstance") %>'></asp:Label>

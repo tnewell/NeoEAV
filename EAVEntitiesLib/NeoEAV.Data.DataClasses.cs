@@ -438,6 +438,7 @@ namespace NeoEAV.Objects
         string ContextKey { get; set; }
 
         ContextType ContextType { get; }
+
         ContextType BindingType { get; }
     }
 

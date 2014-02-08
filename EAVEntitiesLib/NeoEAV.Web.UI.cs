@@ -60,35 +60,7 @@ namespace NeoEAV.Web.UI
             return (value);
         }
 
-        private void UpdateValue(Control control, ContainerInstance dbInstance, Attribute dbAttribute)
-        {
-            IEAVValueControl valueControl = control as IEAVValueControl;
-
-            if (valueControl != null)
-            {
-                Value value = FindValue(dbAttribute, dbInstance, false);
-
-                if (value != null)
-                {
-                    if (String.IsNullOrWhiteSpace(valueControl.RawValue))
-                        context.Values.Remove(value);
-                    else if (value.RawValue != valueControl.RawValue)
-                        value.RawValue = valueControl.RawValue;
-                }
-                else if (!String.IsNullOrWhiteSpace(valueControl.RawValue))
-                {
-                    value = FindValue(dbAttribute, dbInstance, true);
-                    value.RawValue = valueControl.RawValue;
-                }
-            }
-            else
-            {
-                foreach (Control child in control.Controls)
-                    UpdateValue(child, dbInstance, dbAttribute);
-            }
-        }
-
-        private void UpdateValue2(IEAVValueControl control, ContainerInstance dbInstance, Attribute dbAttribute)
+        private void UpdateValue(IEAVValueControl control, ContainerInstance dbInstance, Attribute dbAttribute)
         {
             if (control != null)
             {
@@ -109,86 +81,7 @@ namespace NeoEAV.Web.UI
             }
         }
 
-        private void FillContextSet(Control control, ContextControlType contextType, Container parentContainer, ContainerInstance parentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
-        {
-            if (control is IEAVContextControl && ((IEAVContextControl) control).ContextControlType == contextType)
-            {
-                switch (contextType)
-                {
-                    case ContextControlType.Project:
-                        IEAVContextControl projectControl = control as IEAVContextControl;
-                        Project project = context.Projects.SingleOrDefault(it => it.Name == projectControl.ContextKey);
-
-                        foreach (Control child in control.Controls)
-                        {
-                            FillContextSet(child, ContextControlType.Subject, parentContainer, parentInstance, project, null, null, null, null);
-                        }
-                        break;
-                    case ContextControlType.Subject:
-                        IEAVContextControl subjectControl = control as IEAVContextControl;
-                        Subject subject = dbProject.Subjects.SingleOrDefault(it => it.MemberID == subjectControl.ContextKey);
-
-                        foreach (Control child in control.Controls)
-                        {
-                            FillContextSet(child, ContextControlType.Container, parentContainer, parentInstance, dbProject, subject, null, null, null);
-                        }
-                        break;
-                    case ContextControlType.Container:
-                        IEAVContextControl containerControl = control as IEAVContextControl;
-                        Container container = dbProject.Containers.SingleOrDefault(it => it.ParentContainer == parentContainer && it.Name == containerControl.ContextKey);
-
-                        foreach (Control child in control.Controls)
-                        {
-                            FillContextSet(child, ContextControlType.Instance, parentContainer, parentInstance, dbProject, dbSubject, container, null, null);
-                        }
-                        break;
-                    case ContextControlType.Instance:
-                        IEAVContextControl instanceControl = control as IEAVContextControl;
-                        ContainerInstance instance = FindContainerInstance(dbSubject, dbContainer, parentInstance, instanceControl.ContextKey, true);
-
-                        if (String.IsNullOrWhiteSpace(instanceControl.ContextKey))
-                            instanceControl.ContextKey = instance.RepeatInstance.ToString();
-
-                        foreach (Control child in control.Controls)
-                        {
-                            if (!(child is IEAVContextControl) || ((IEAVContextControl) child).ContextControlType == ContextControlType.Attribute)
-                                FillContextSet(child, ContextControlType.Attribute, parentContainer, parentInstance, dbProject, dbSubject, dbContainer, instance, null);
-                        }
-
-                        foreach (Control child in control.Controls)
-                        {
-                            if (!(child is IEAVContextControl) || ((IEAVContextControl)child).ContextControlType == ContextControlType.Container)
-                                FillContextSet(child, ContextControlType.Container, dbContainer, instance, dbProject, dbSubject, null, null, null);
-                        }
-
-                        if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
-                        {
-                            context.ContainerInstances.Remove(instance);
-
-                            instanceControl.ContextKey = null;
-                        }
-                        break;
-                    case ContextControlType.Attribute:
-                        IEAVContextControl attributeControl = control as IEAVContextControl;
-                        Attribute attribute = dbContainer.Attributes.SingleOrDefault(it => it.Name == attributeControl.ContextKey);
-
-                        foreach (Control child in control.Controls)
-                        {
-                            UpdateValue(child, dbInstance, attribute);
-                        }
-                        break;
-                }
-            }
-            else
-            {
-                foreach (Control child in control.Controls)
-                {
-                    FillContextSet(child, contextType, parentContainer, parentInstance, dbProject, dbSubject, dbContainer, dbInstance, dbAttribute);
-                }
-            }
-        }
-
-        private void FillContextSet2(IEAVContextControl control, Container dbParentContainer, ContainerInstance dbParentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
+        private void FillContextSet(IEAVContextControl control, Container dbParentContainer, ContainerInstance dbParentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
         {
             // TODO: Do we need db items? Can we use DataItem property somehow?
             switch (control.ContextControlType)
@@ -198,7 +91,7 @@ namespace NeoEAV.Web.UI
 
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
-                        FillContextSet2(child, dbParentContainer, dbParentInstance, project, null, null, null, null);
+                        FillContextSet(child, dbParentContainer, dbParentInstance, project, null, null, null, null);
                     }
                     break;
                 case ContextControlType.Subject:
@@ -206,7 +99,7 @@ namespace NeoEAV.Web.UI
 
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
-                        FillContextSet2(child, dbParentContainer, dbParentInstance, dbProject, subject, null, null, null);
+                        FillContextSet(child, dbParentContainer, dbParentInstance, dbProject, subject, null, null, null);
                     }
                     break;
                 case ContextControlType.Container:
@@ -214,7 +107,7 @@ namespace NeoEAV.Web.UI
 
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
-                        FillContextSet2(child, dbParentContainer, dbParentInstance, dbProject, dbSubject, container, null, null);
+                        FillContextSet(child, dbParentContainer, dbParentInstance, dbProject, dbSubject, container, null, null);
                     }
                     break;
                 case ContextControlType.Instance:
@@ -227,7 +120,7 @@ namespace NeoEAV.Web.UI
                     {
                         bool isAttribute = child.ContextControlType == ContextControlType.Attribute;
 
-                        FillContextSet2(child, isAttribute ? dbParentContainer : dbContainer, isAttribute ? dbParentInstance : instance, dbProject, dbSubject, isAttribute ? dbContainer : null, isAttribute ? instance : null, null);
+                        FillContextSet(child, isAttribute ? dbParentContainer : dbContainer, isAttribute ? dbParentInstance : instance, dbProject, dbSubject, isAttribute ? dbContainer : null, isAttribute ? instance : null, null);
                     }
 
                     if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
@@ -241,7 +134,7 @@ namespace NeoEAV.Web.UI
 
                     foreach (IEAVValueControl child in ((IEAVValueControlContainer)control).ValueControls)
                     {
-                        UpdateValue2(child, dbInstance, attribute);
+                        UpdateValue(child, dbInstance, attribute);
                     }
                     break;
             }
@@ -283,16 +176,9 @@ namespace NeoEAV.Web.UI
 
         public IEnumerable<ContainerInstance> GetContainerInstancesForActiveSubjectAndContainer() { return (activeSubject != null ? activeSubject.ContainerInstances.Where(it => it.Container == activeContainer && it.ParentContainerInstance == null) : Enumerable.Empty<ContainerInstance>()); }
 
-        public void Save(Control contextControl)
+        public void Save(IEAVContextControl contextControl)
         {
-            FillContextSet(contextControl, ContextControlType.Project, null, null, null, null, null, null, null);
-
-            context.SaveChanges();
-        }
-
-        public void Save2(IEAVContextControl contextControl)
-        {
-            FillContextSet2(contextControl, null, null, null, null, null, null, null);
+            FillContextSet(contextControl, null, null, null, null, null, null, null);
 
             context.SaveChanges();
         }
@@ -300,7 +186,6 @@ namespace NeoEAV.Web.UI
 
     public abstract class EAVContextControl : Control, IEAVContextControl, IDataItemContainer
     {
-        protected bool inBind = false;
         protected bool myBind = false;
 
         public static IEAVContextControl FindAncestor(Control control, ContextControlType ancestorContextType)
@@ -387,7 +272,7 @@ namespace NeoEAV.Web.UI
             {
                 dataSource = value;
 
-                myBind = !inBind;
+                myBind = true;
             }
         }
 
@@ -398,11 +283,9 @@ namespace NeoEAV.Web.UI
             {
                 ViewState["ContextKey"] = value;
 
-                myBind = !inBind;
+                myBind = true;
             }
         }
-
-        public bool DynamicContextKey { get; set; }
 
         protected abstract void RefreshDataSource();
 
@@ -410,14 +293,7 @@ namespace NeoEAV.Web.UI
         {
             if (!myBind && (this.ContextType.HasFlag(ContextType.Data) || this.BindingType.HasFlag(ContextType.Metadata)))
             {
-                inBind = true;
-
                 RefreshDataSource();
-
-                if (DynamicContextKey)
-                    ContextKey = null;
-
-                inBind = false;
             }
 
             base.OnDataBinding(e);

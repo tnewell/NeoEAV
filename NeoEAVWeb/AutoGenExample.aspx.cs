@@ -107,7 +107,8 @@ namespace NeoEAVWeb
 
         protected void ctlSaveButton_Click(object sender, EventArgs e)
         {
-            myContextController.Save(this);
+            //myContextController.Save(this);
+            myContextController.Save(ctlProjectContext);
 
             ctlProjectContext.DataBind();
         }
