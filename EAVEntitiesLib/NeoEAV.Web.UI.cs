@@ -50,7 +50,7 @@ namespace NeoEAV.Web.UI
         private ContainerInstance FindContainerInstance2(IEAVContextControl control, ContainerInstance parentInstance, string repeatInstance, bool createIfMissing)
         {
             Container container = GetDataItem<Container>(control.ContextParent);
-            Subject subject = container != null ? GetDataItem<Subject>(control.ContextParent.ContextParent) : null;
+            Subject subject = parentInstance != null ? parentInstance.Subject : container != null ? GetDataItem<Subject>(control.ContextParent.ContextParent) : null;
 
             ContainerInstance instance = subject != null ? subject.ContainerInstances.SingleOrDefault(it => it.Container == container && it.ParentContainerInstance == parentInstance && it.RepeatInstance.ToString() == repeatInstance) : null;
             bool parentInstanceCorrect = container == null || (container.ParentContainer != null ^ parentInstance == null);
@@ -114,7 +114,7 @@ namespace NeoEAV.Web.UI
 
         private T GetDataItem<T>(IEAVContextControl control) where T : class
         {
-            return(control is IDataItemContainer ? ((IDataItemContainer)control).DataItem as T : null);
+            return(control.DataItem as T);
         }
 
         private void FillContextSet(IEAVContextControl control, Container dbParentContainer, ContainerInstance dbParentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
@@ -175,6 +175,59 @@ namespace NeoEAV.Web.UI
             }
         }
 
+        private void FillContextSet2(IEAVContextControl control, ContainerInstance dbInstance)
+        {
+            switch (control.ContextControlType)
+            {
+                case ContextControlType.Project:
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        FillContextSet2(child, null);
+                    }
+                    break;
+                case ContextControlType.Subject:
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        FillContextSet2(child, null);
+                    }
+                    break;
+                case ContextControlType.Container:
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        FillContextSet2(child, dbInstance);
+                    }
+                    break;
+                case ContextControlType.Instance:
+                    ContainerInstance instance = FindContainerInstance2(control, dbInstance, control.ContextKey, true);
+
+                    if (String.IsNullOrWhiteSpace(control.ContextKey))
+                        control.ContextKey = instance.RepeatInstance.ToString();
+
+                    foreach (IEAVContextControl child in control.ContextChildren)
+                    {
+                        FillContextSet2(child, instance);
+                    }
+
+                    if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
+                    {
+                        context.ContainerInstances.Remove(instance);
+                        control.ContextKey = null;
+                    }
+                    break;
+                case ContextControlType.Attribute:
+                    Attribute attribute = GetDataItem<Attribute>(control);
+
+                    if (control is IEAVValueControlContainer)
+                    {
+                        foreach (IEAVValueControl child in ((IEAVValueControlContainer)control).ValueControls)
+                        {
+                            UpdateValue(child, dbInstance, attribute);
+                        }
+                    }
+                    break;
+            }
+        }
+
         public IEnumerable<Project> Projects { get { return (context.Projects); } }
 
         private Project activeProject;
@@ -213,7 +266,8 @@ namespace NeoEAV.Web.UI
 
         public void Save(IEAVContextControl contextControl)
         {
-            FillContextSet(contextControl, null, null, null, null, null, null, null);
+            //FillContextSet(contextControl, null, null, null, null, null, null, null);
+            FillContextSet2(contextControl, null);
 
             context.SaveChanges();
         }
@@ -373,7 +427,10 @@ namespace NeoEAV.Web.UI
                 IEnumerable<Subject> dataSource = DataSource as IEnumerable<Subject>;
 
                 if (dataSource == null)
+                {
                     RefreshDataSource();
+                    dataSource = DataSource as IEnumerable<Subject>;
+                }
 
                 return (dataSource != null ? dataSource.SingleOrDefault(it => it.MemberID == ContextKey) : null);
             }
@@ -402,7 +459,10 @@ namespace NeoEAV.Web.UI
                 IEnumerable<Container> dataSource = DataSource as IEnumerable<Container>;
 
                 if (dataSource == null)
+                {
                     RefreshDataSource();
+                    dataSource = DataSource as IEnumerable<Container>;
+                }
 
                 return (dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextKey) : null);
             }
@@ -431,8 +491,10 @@ namespace NeoEAV.Web.UI
             {
                 IEnumerable<ContainerInstance> dataSource = DataSource as IEnumerable<ContainerInstance>;
 
-                if (dataSource == null)
+                {
                     RefreshDataSource();
+                    dataSource = DataSource as IEnumerable<ContainerInstance>;
+                }
 
                 return (dataSource != null ? dataSource.SingleOrDefault(it => it.RepeatInstance.ToString() == ContextKey) : null);
             }
@@ -453,7 +515,7 @@ namespace NeoEAV.Web.UI
         public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Instance)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Attribute); } }
-
+            
         public override ContextType ContextType { get { return (ContextType.Metadata); } }
 
         public override object DataItem
@@ -462,8 +524,10 @@ namespace NeoEAV.Web.UI
             {
                 IEnumerable<Attribute> dataSource = DataSource as IEnumerable<Attribute>;
 
-                if (dataSource == null)
+                {
                     RefreshDataSource();
+                    dataSource = DataSource as IEnumerable<Attribute>;
+                }
 
                 return (dataSource != null ? dataSource.SingleOrDefault(it => it.Name == ContextKey) : null);
             }
