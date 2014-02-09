@@ -47,6 +47,37 @@ namespace NeoEAV.Web.UI
             return (instance);
         }
 
+        private ContainerInstance FindContainerInstance2(IEAVContextControl control, ContainerInstance parentInstance, string repeatInstance, bool createIfMissing)
+        {
+            Container container = GetDataItem<Container>(control.ContextParent);
+            Subject subject = container != null ? GetDataItem<Subject>(control.ContextParent.ContextParent) : null;
+
+            ContainerInstance instance = subject != null ? subject.ContainerInstances.SingleOrDefault(it => it.Container == container && it.ParentContainerInstance == parentInstance && it.RepeatInstance.ToString() == repeatInstance) : null;
+            bool parentInstanceCorrect = container == null || (container.ParentContainer != null ^ parentInstance == null);
+
+            if (instance == null && container != null && subject != null && parentInstanceCorrect && createIfMissing)
+            {
+                if (String.IsNullOrWhiteSpace(repeatInstance))
+                {
+                    var instances = subject.ContainerInstances.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
+                    int newRepeatInstance = instances.Any() ? instances.Max(it => it.RepeatInstance) + 1 : 0;
+
+                    instance = new ContainerInstance() { Container = container, Subject = subject, ParentContainerInstance = parentInstance, RepeatInstance = newRepeatInstance };
+
+                    if (parentInstance == null)
+                        subject.ContainerInstances.Add(instance);
+                    else
+                        parentInstance.ChildContainerInstances.Add(instance);
+                }
+                else
+                {
+                    throw (new ApplicationException(String.Format("Attempt to create new Container Instance when Repeat Instance not found disallowed. Repeat Instance = '{0}'.", repeatInstance)));
+                }
+            }
+
+            return (instance);
+        }
+
         private Value FindValue(Attribute attribute, ContainerInstance instance, bool createIfMissing)
         {
             Value value = instance != null ? instance.Values.SingleOrDefault(it => it.Attribute == attribute) : null;
@@ -81,13 +112,17 @@ namespace NeoEAV.Web.UI
             }
         }
 
+        private T GetDataItem<T>(IEAVContextControl control) where T : class
+        {
+            return(control is IDataItemContainer ? ((IDataItemContainer)control).DataItem as T : null);
+        }
+
         private void FillContextSet(IEAVContextControl control, Container dbParentContainer, ContainerInstance dbParentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
         {
-            // TODO: Do we need db items? Can we use DataItem property somehow?
             switch (control.ContextControlType)
             {
                 case ContextControlType.Project:
-                    Project project = context.Projects.SingleOrDefault(it => it.Name == control.ContextKey);
+                    Project project = GetDataItem<Project>(control);
 
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
@@ -95,7 +130,7 @@ namespace NeoEAV.Web.UI
                     }
                     break;
                 case ContextControlType.Subject:
-                    Subject subject = dbProject.Subjects.SingleOrDefault(it => it.MemberID == control.ContextKey);
+                    Subject subject = GetDataItem<Subject>(control);
 
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
@@ -103,7 +138,7 @@ namespace NeoEAV.Web.UI
                     }
                     break;
                 case ContextControlType.Container:
-                    Container container = dbProject.Containers.SingleOrDefault(it => it.ParentContainer == dbParentContainer && it.Name == control.ContextKey);
+                    Container container = GetDataItem<Container>(control);
 
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
@@ -130,7 +165,7 @@ namespace NeoEAV.Web.UI
                     }
                     break;
                 case ContextControlType.Attribute:
-                    Attribute attribute = dbContainer.Attributes.SingleOrDefault(it => it.Name == control.ContextKey);
+                    Attribute attribute = GetDataItem<Attribute>(control);
 
                     foreach (IEAVValueControl child in ((IEAVValueControlContainer)control).ValueControls)
                     {

@@ -10,6 +10,44 @@ using System.Text;
 using System.Threading.Tasks;
 
 
+// TODO: Eventually these need to be in their own class file
+namespace NeoEAV.Objects
+{
+    public enum ContextControlType { Unknown, Project, Subject, Container, Instance, Attribute }
+
+    [Flags]
+    public enum ContextType { Unknown = 0, Data = 1, Metadata = 2 }
+
+    public interface IEAVContextControl
+    {
+        IEAVContextControl ContextParent { get; }
+
+        IEnumerable<IEAVContextControl> ContextChildren { get; }
+
+        ContextControlType ContextControlType { get; }
+
+        ContextType ContextType { get; }
+
+        ContextType BindingType { get; }
+
+        object DataSource { get; set; }
+
+        string ContextKey { get; set; }
+
+        object DataItem { get; }
+    }
+
+    public interface IEAVValueControlContainer
+    {
+        IEnumerable<IEAVValueControl> ValueControls { get; }
+    }
+
+    public interface IEAVValueControl
+    {
+        string RawValue { get; set; }
+    }
+}
+
 namespace NeoEAV.Data.DataClasses
 {
     public class EAVEntityContext : DbContext
@@ -419,36 +457,3 @@ namespace NeoEAV.Data.DataClasses
     }
 }
 
-// TODO: Eventually these need to be in their own class file
-namespace NeoEAV.Objects
-{
-    public enum ContextControlType { Unknown, Project, Subject, Container, Instance, Attribute }
-
-    [Flags]
-    public enum ContextType { Unknown = 0, Data = 1, Metadata = 2 }
-
-    public interface IEAVContextControl
-    {
-        IEAVContextControl ContextParent { get; }
-
-        IEnumerable<IEAVContextControl> ContextChildren { get; }
-
-        ContextControlType ContextControlType { get; }
-
-        string ContextKey { get; set; }
-
-        ContextType ContextType { get; }
-
-        ContextType BindingType { get; }
-    }
-
-    public interface IEAVValueControlContainer
-    {
-        IEnumerable<IEAVValueControl> ValueControls { get; }
-    }
-
-    public interface IEAVValueControl
-    {
-        string RawValue { get; set; }
-    }
-}
