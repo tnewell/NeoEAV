@@ -44,6 +44,11 @@ namespace NeoEAV.Objects
 
     public interface IEAVValueControl
     {
+        IEAVContextControl ContextParent { get; }
+
+        // TODO: ???
+        //object DataItem { get; }
+
         string RawValue { get; set; }
     }
 }

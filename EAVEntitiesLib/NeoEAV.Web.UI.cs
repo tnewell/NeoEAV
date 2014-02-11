@@ -19,35 +19,46 @@ namespace NeoEAV.Web.UI
     {
         private EAVEntityContext context = new EAVEntityContext();
 
-        private ContainerInstance FindContainerInstance(Subject subject, Container container, ContainerInstance parentInstance, string repeatInstance, bool createIfMissing)
+        private static T GetDataItem<T>(IEAVContextControl control) where T : class
         {
-            ContainerInstance instance = subject != null ? subject.ContainerInstances.SingleOrDefault(it => it.Container == container && it.ParentContainerInstance == parentInstance && it.RepeatInstance.ToString() == repeatInstance) : null;
-            bool parentInstanceCorrect = container == null || (container.ParentContainer != null ^ parentInstance == null);
-
-            if (instance == null && container != null && subject != null && parentInstanceCorrect && createIfMissing)
-            {
-                if (String.IsNullOrWhiteSpace(repeatInstance))
-                {
-                    var instances = subject.ContainerInstances.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
-                    int newRepeatInstance = instances.Any() ? instances.Max(it => it.RepeatInstance) + 1 : 0;
-
-                    instance = new ContainerInstance() { Container = container, Subject = subject, ParentContainerInstance = parentInstance, RepeatInstance = newRepeatInstance };
-
-                    if (parentInstance == null)
-                        subject.ContainerInstances.Add(instance);
-                    else
-                        parentInstance.ChildContainerInstances.Add(instance);
-                }
-                else
-                {
-                    throw (new ApplicationException(String.Format("Attempt to create new Container Instance when Repeat Instance not found disallowed. Repeat Instance = '{0}'.", repeatInstance)));
-                }
-            }
-
-            return (instance);
+            return (control != null ? control.DataItem as T : null);
         }
 
-        private ContainerInstance FindContainerInstance2(IEAVContextControl control, ContainerInstance parentInstance, string repeatInstance, bool createIfMissing)
+        private Value AcquireValue(Attribute attribute, ContainerInstance instance, bool createIfMissing)
+        {
+            Value value = instance != null ? instance.Values.SingleOrDefault(it => it.Attribute == attribute) : null;
+
+            if (value == null && attribute != null && instance != null && createIfMissing)
+            {
+                value = new Value() { Attribute = attribute, ContainerInstance = instance };
+                instance.Values.Add(value);
+            }
+
+            return (value);
+        }
+
+        private void UpdateValue(IEAVValueControl control, ContainerInstance dbInstance, Attribute dbAttribute)
+        {
+            if (control != null)
+            {
+                Value value = AcquireValue(dbAttribute, dbInstance, false);
+
+                if (value != null)
+                {
+                    if (String.IsNullOrWhiteSpace(control.RawValue))
+                        context.Values.Remove(value);
+                    else if (value.RawValue != control.RawValue)
+                        value.RawValue = control.RawValue;
+                }
+                else if (!String.IsNullOrWhiteSpace(control.RawValue))
+                {
+                    value = AcquireValue(dbAttribute, dbInstance, true);
+                    value.RawValue = control.RawValue;
+                }
+            }
+        }
+
+        private ContainerInstance AcquireContainerInstance(IEAVContextControl control, ContainerInstance parentInstance, string repeatInstance, bool createIfMissing)
         {
             Container container = GetDataItem<Container>(control.ContextParent);
             Subject subject = parentInstance != null ? parentInstance.Subject : container != null ? GetDataItem<Subject>(control.ContextParent.ContextParent) : null;
@@ -78,134 +89,37 @@ namespace NeoEAV.Web.UI
             return (instance);
         }
 
-        private Value FindValue(Attribute attribute, ContainerInstance instance, bool createIfMissing)
-        {
-            Value value = instance != null ? instance.Values.SingleOrDefault(it => it.Attribute == attribute) : null;
-
-            if (value == null && attribute != null && instance != null && createIfMissing)
-            {
-                value = new Value() { Attribute = attribute, ContainerInstance = instance };
-                instance.Values.Add(value);
-            }
-
-            return (value);
-        }
-
-        private void UpdateValue(IEAVValueControl control, ContainerInstance dbInstance, Attribute dbAttribute)
-        {
-            if (control != null)
-            {
-                Value value = FindValue(dbAttribute, dbInstance, false);
-
-                if (value != null)
-                {
-                    if (String.IsNullOrWhiteSpace(control.RawValue))
-                        context.Values.Remove(value);
-                    else if (value.RawValue != control.RawValue)
-                        value.RawValue = control.RawValue;
-                }
-                else if (!String.IsNullOrWhiteSpace(control.RawValue))
-                {
-                    value = FindValue(dbAttribute, dbInstance, true);
-                    value.RawValue = control.RawValue;
-                }
-            }
-        }
-
-        private T GetDataItem<T>(IEAVContextControl control) where T : class
-        {
-            return(control.DataItem as T);
-        }
-
-        private void FillContextSet(IEAVContextControl control, Container dbParentContainer, ContainerInstance dbParentInstance, Project dbProject, Subject dbSubject, Container dbContainer, ContainerInstance dbInstance, Attribute dbAttribute)
-        {
-            switch (control.ContextControlType)
-            {
-                case ContextControlType.Project:
-                    Project project = GetDataItem<Project>(control);
-
-                    foreach (IEAVContextControl child in control.ContextChildren)
-                    {
-                        FillContextSet(child, dbParentContainer, dbParentInstance, project, null, null, null, null);
-                    }
-                    break;
-                case ContextControlType.Subject:
-                    Subject subject = GetDataItem<Subject>(control);
-
-                    foreach (IEAVContextControl child in control.ContextChildren)
-                    {
-                        FillContextSet(child, dbParentContainer, dbParentInstance, dbProject, subject, null, null, null);
-                    }
-                    break;
-                case ContextControlType.Container:
-                    Container container = GetDataItem<Container>(control);
-
-                    foreach (IEAVContextControl child in control.ContextChildren)
-                    {
-                        FillContextSet(child, dbParentContainer, dbParentInstance, dbProject, dbSubject, container, null, null);
-                    }
-                    break;
-                case ContextControlType.Instance:
-                    ContainerInstance instance = FindContainerInstance(dbSubject, dbContainer, dbParentInstance, control.ContextKey, true);
-
-                    if (String.IsNullOrWhiteSpace(control.ContextKey))
-                        control.ContextKey = instance.RepeatInstance.ToString();
-
-                    foreach (IEAVContextControl child in control.ContextChildren)
-                    {
-                        bool isAttribute = child.ContextControlType == ContextControlType.Attribute;
-
-                        FillContextSet(child, isAttribute ? dbParentContainer : dbContainer, isAttribute ? dbParentInstance : instance, dbProject, dbSubject, isAttribute ? dbContainer : null, isAttribute ? instance : null, null);
-                    }
-
-                    if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
-                    {
-                        context.ContainerInstances.Remove(instance);
-                        control.ContextKey = null;
-                    }
-                    break;
-                case ContextControlType.Attribute:
-                    Attribute attribute = GetDataItem<Attribute>(control);
-
-                    foreach (IEAVValueControl child in ((IEAVValueControlContainer)control).ValueControls)
-                    {
-                        UpdateValue(child, dbInstance, attribute);
-                    }
-                    break;
-            }
-        }
-
-        private void FillContextSet2(IEAVContextControl control, ContainerInstance dbInstance)
+        private void FillContextSet(IEAVContextControl control, ContainerInstance dbInstance)
         {
             switch (control.ContextControlType)
             {
                 case ContextControlType.Project:
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
-                        FillContextSet2(child, null);
+                        FillContextSet(child, null);
                     }
                     break;
                 case ContextControlType.Subject:
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
-                        FillContextSet2(child, null);
+                        FillContextSet(child, null);
                     }
                     break;
                 case ContextControlType.Container:
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
-                        FillContextSet2(child, dbInstance);
+                        FillContextSet(child, dbInstance);
                     }
                     break;
                 case ContextControlType.Instance:
-                    ContainerInstance instance = FindContainerInstance2(control, dbInstance, control.ContextKey, true);
+                    ContainerInstance instance = AcquireContainerInstance(control, dbInstance, control.ContextKey, true);
 
                     if (String.IsNullOrWhiteSpace(control.ContextKey))
                         control.ContextKey = instance.RepeatInstance.ToString();
 
                     foreach (IEAVContextControl child in control.ContextChildren)
                     {
-                        FillContextSet2(child, instance);
+                        FillContextSet(child, instance);
                     }
 
                     if (!instance.Values.Any() && !instance.ChildContainerInstances.Any())
@@ -267,7 +181,7 @@ namespace NeoEAV.Web.UI
         public void Save(IEAVContextControl contextControl)
         {
             //FillContextSet(contextControl, null, null, null, null, null, null, null);
-            FillContextSet2(contextControl, null);
+            FillContextSet(contextControl, null);
 
             context.SaveChanges();
         }
@@ -569,6 +483,14 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVTextBox : TextBox, IEAVValueControl
     {
+        public IEAVContextControl ContextParent
+        {
+            get
+            {
+                return (EAVContextControl.FindAncestor(this, ContextControlType.Attribute));
+            }
+        }
+
         public string RawValue { get { return (Text); } set { Text = value; } }
 
         public override bool Enabled
