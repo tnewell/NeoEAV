@@ -220,366 +220,341 @@ namespace EAVEntitiesTest
             return (dbProject);
         }
 
+        private void SingleContainerTest(bool repeating, bool noData)
+        {
+            string project = "Unit Test Project";
+            string subject = "Unit Test Subject";
+
+            AddProjectMetadata(project, null, "Unit Test Root Container", repeating, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
+
+            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
+            EAVContextController controller = new EAVContextController();
+
+            ctlProject.DataSource = controller.Projects;
+            ctlProject.DataBind();
+
+            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
+            EAVInstanceContextControl ctlInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
+            
+            EAVTextBox ctlValue0 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
+            EAVTextBox ctlValue1 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
+            EAVTextBox ctlValue2 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
+
+            try
+            {
+                // Insert
+                ctlValue0.RawValue = "Insert Value 0";
+                ctlValue1.RawValue = "Insert Value 1";
+                ctlValue2.RawValue = "Insert Value 2";
+
+                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
+
+                controller.Save(ctlProject);
+
+                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
+                int repeatInstance = Int32.Parse(ctlInstance.ContextKey);
+
+                using (EAVEntityContext ctx = new EAVEntityContext())
+                {
+                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
+
+                    Assert.IsNotNull(dbInstance);
+                    Assert.IsTrue(dbInstance.Values.Any());
+                    
+                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                }
+
+                if (noData)
+                {
+                    // Update
+                    ctlValue0.RawValue = "Update Value 0";
+                    ctlValue1.RawValue = "Update Value 1";
+                    ctlValue1.RawValue = "Update Value 2";
+
+                    controller.Save(ctlProject);
+
+                    using (EAVEntityContext ctx = new EAVEntityContext())
+                    {
+                        ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
+
+                        Assert.IsNotNull(dbInstance);
+                        Assert.IsTrue(dbInstance.Values.Any());
+                        
+                        Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                        Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                        Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    }
+
+                    // Partial Delete
+                    ctlValue0.RawValue = null;
+
+                    controller.Save(ctlProject);
+
+                    using (EAVEntityContext ctx = new EAVEntityContext())
+                    {
+                        ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
+
+                        Assert.IsNotNull(dbInstance);
+                        Assert.IsTrue(dbInstance.Values.Any());
+                        
+                        Assert.IsNull(dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                        Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                        Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    }
+
+                    // Delete All
+                    ctlValue1.RawValue = null;
+                    ctlValue2.RawValue = null;
+
+                    controller.Save(ctlProject);
+
+                    Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
+
+                    using (EAVEntityContext ctx = new EAVEntityContext())
+                    {
+                        ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
+
+                        Assert.IsNull(dbInstance);
+                    }
+                }
+                else
+                {
+                    // Second Insert
+                    ctlInstance.ContextKey = null;
+                    ctlProject.DataBind();
+
+                    ctlValue0.RawValue = "Insert Value 3";
+                    ctlValue1.RawValue = "Insert Value 4";
+                    ctlValue2.RawValue = "Insert Value 5";
+
+                    Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
+
+                    controller.Save(ctlProject);
+
+                    Assert.IsFalse(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
+                    repeatInstance = Int32.Parse(ctlInstance.ContextKey);
+
+                    using (EAVEntityContext ctx = new EAVEntityContext())
+                    {
+                        ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
+
+                        Assert.IsNotNull(dbInstance);
+                        Assert.IsTrue(dbInstance.Values.Any());
+                        
+                        Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                        Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                        Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    }
+                }
+            }
+            finally
+            {
+                RemoveProjectMetadata(project);
+            }
+        }
+
+        private void ParentChildContainersTest(bool parentRepeating, bool childRepeating)
+        {
+            string project = "Unit Test Project";
+            string subject = "Unit Test Subject";
+
+            AddProjectMetadata(project, null, "Unit Test Root Container", parentRepeating, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
+            AddProjectMetadata(project, "Unit Test Root Container", "Unit Test Child Container", childRepeating, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
+
+            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
+            EAVContextController controller = new EAVContextController();
+
+            ctlProject.DataSource = controller.Projects;
+            ctlProject.DataBind();
+
+            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
+            EAVInstanceContextControl ctlParentInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
+
+            EAVTextBox ctlParentValue0 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
+            EAVTextBox ctlParentValue1 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
+            EAVTextBox ctlParentValue2 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
+
+            EAVInstanceContextControl ctlChildInstance = ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Container).ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
+
+            EAVTextBox ctlChildValue0 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
+            EAVTextBox ctlChildValue1 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
+            EAVTextBox ctlChildValue2 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
+
+            try
+            {
+                // Parent Insert
+                ctlParentValue0.RawValue = "Insert Parent Value 0";
+                ctlParentValue1.RawValue = "Insert Parent Value 1";
+                ctlParentValue2.RawValue = "Insert Parent Value 2";
+
+                // Child Insert
+                ctlChildValue0.RawValue = "Insert Child Value 0";
+                ctlChildValue1.RawValue = "Insert Child Value 1";
+                ctlChildValue2.RawValue = "Insert Child Value 2";
+
+                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
+                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
+
+                controller.Save(ctlProject);
+
+                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
+                int parentRepeatInstance = Int32.Parse(ctlParentInstance.ContextKey);
+
+                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
+                int childRepeatInstance = Int32.Parse(ctlChildInstance.ContextKey);
+
+                using (EAVEntityContext ctx = new EAVEntityContext())
+                {
+                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
+                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
+
+                    Assert.IsNotNull(dbParentInstance);
+                    Assert.IsTrue(dbParentInstance.Values.Any());
+
+                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+
+                    Assert.IsNotNull(dbChildInstance);
+                    Assert.IsTrue(dbChildInstance.Values.Any());
+
+                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                }
+
+                // Parent Update
+                ctlParentValue0.RawValue = "Update Parent Value 0";
+                ctlParentValue1.RawValue = "Update Parent Value 1";
+                ctlParentValue2.RawValue = "Update Parent Value 2";
+
+                // Child Update
+                ctlChildValue0.RawValue = "Update Child Value 0";
+                ctlChildValue1.RawValue = "Update Child Value 1";
+                ctlChildValue2.RawValue = "Update Child Value 2";
+
+                controller.Save(ctlProject);
+
+                using (EAVEntityContext ctx = new EAVEntityContext())
+                {
+                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
+                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
+
+                    Assert.IsNotNull(dbParentInstance);
+                    Assert.IsTrue(dbParentInstance.Values.Any());
+
+                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+
+                    Assert.IsNotNull(dbChildInstance);
+                    Assert.IsTrue(dbChildInstance.Values.Any());
+
+                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                }
+
+                // Child Delete
+                ctlChildValue0.RawValue = null;
+                ctlChildValue1.RawValue = null;
+                ctlChildValue2.RawValue = null;
+
+                controller.Save(ctlProject);
+
+                using (EAVEntityContext ctx = new EAVEntityContext())
+                {
+                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
+                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
+
+                    Assert.IsNotNull(dbParentInstance);
+                    Assert.IsTrue(dbParentInstance.Values.Any());
+
+                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+
+                    Assert.IsNull(dbChildInstance);
+                }
+
+                // Parent Delete
+                ctlParentValue0.RawValue = null;
+                ctlParentValue1.RawValue = null;
+                ctlParentValue2.RawValue = null;
+
+                controller.Save(ctlProject);
+
+                using (EAVEntityContext ctx = new EAVEntityContext())
+                {
+                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
+
+                    Assert.IsNull(dbParentInstance);
+                }
+            }
+            finally
+            {
+                RemoveProjectMetadata(project);
+            }
+        }
+
         [TestMethod]
         public void Sandbox()
         {
-            Project p = null;
-
-            try
-            {
-                p = AddProjectMetadata("Unit Test Project", null, "Unit Test Root Container", false, "123ABC", "Attribute R1", "Attribute R2");
-                p = AddProjectMetadata("Unit Test Project", "Unit Test Root Container", "Unit Test Child Container", false, "123ABC", "Attribute C1", "Attribute C2");
-            }
-            finally
-            {
-                RemoveProjectMetadata("Unit Test Project");
-            }
         }
 
         [TestMethod]
-        public void CRUD_SingleRepeatingContainerWithoutData()
+        public void SingleRepeatingContainerCRUD()
         {
-            string project = "Unit Test Project";
-            string subject = "Unit Test Subject";
-
-            AddProjectMetadata(project, null, "Unit Test Root Container", true, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-
-            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
-            EAVContextController controller = new EAVContextController();
-
-            ctlProject.DataSource = controller.Projects;
-            ctlProject.DataBind();
-
-            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
-            EAVInstanceContextControl ctlInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-            EAVTextBox ctlValue0 = ((IEAVValueControlContainer) ctlInstance.ContextChildren.ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue1 = ((IEAVValueControlContainer) ctlInstance.ContextChildren.ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue2 = ((IEAVValueControlContainer) ctlInstance.ContextChildren.ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            try
-            {
-                // Insert
-                ctlValue0.RawValue = "Insert Value 0";
-                ctlValue1.RawValue = "Insert Value 1";
-                ctlValue2.RawValue = "Insert Value 2";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-                int repeatInstance = Int32.Parse(ctlInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Update
-                ctlValue0.RawValue = "Update Value 0";
-                ctlValue1.RawValue = "Update Value 1";
-                ctlValue1.RawValue = "Update Value 2";
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Partial Delete
-                ctlValue0.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.IsNull(dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Delete All
-                ctlValue1.RawValue = null;
-                ctlValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNull(dbInstance);
-                }
-            }
-            finally
-            {
-                RemoveProjectMetadata(project);
-            }
+            SingleContainerTest(true, false);
         }
 
         [TestMethod]
-        public void CRUD_SingleRepeatingContainerWithData()
+        public void SingleRepeatingContainerInsertWithData()
         {
-            string project = "Unit Test Project";
-            string subject = "Unit Test Subject";
-
-            AddProjectMetadata(project, null, "Unit Test Root Container", true, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-
-            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
-            EAVContextController controller = new EAVContextController();
-
-            ctlProject.DataSource = controller.Projects;
-            ctlProject.DataBind();
-
-            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
-            EAVInstanceContextControl ctlInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-            EAVTextBox ctlValue0 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue1 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue2 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            try
-            {
-                // First Insert
-                ctlValue0.RawValue = "Insert Value 0";
-                ctlValue1.RawValue = "Insert Value 1";
-                ctlValue2.RawValue = "Insert Value 2";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-                int repeatInstance = Int32.Parse(ctlInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Second Insert
-                ctlInstance.ContextKey = null;
-                ctlProject.DataBind();
-
-                ctlValue0.RawValue = "Insert Value 3";
-                ctlValue1.RawValue = "Insert Value 4";
-                ctlValue2.RawValue = "Insert Value 5";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-                repeatInstance = Int32.Parse(ctlInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-            }
-            finally
-            {
-                RemoveProjectMetadata(project);
-            }
+            SingleContainerTest(true, true);
         }
 
         [TestMethod]
-        public void CRUD_SingleNonRepeatingContainerWithoutData()
+        public void SingleNonRepeatingContainerCRUD()
         {
-            string project = "Unit Test Project";
-            string subject = "Unit Test Subject";
-
-            AddProjectMetadata(project, null, "Unit Test Root Container", false, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-
-            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
-            EAVContextController controller = new EAVContextController();
-
-            ctlProject.DataSource = controller.Projects;
-            ctlProject.DataBind();
-
-            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
-            EAVInstanceContextControl ctlInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-            EAVTextBox ctlValue0 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue1 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue2 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            try
-            {
-                // Insert
-                ctlValue0.RawValue = "Insert Value 0";
-                ctlValue1.RawValue = "Insert Value 1";
-                ctlValue2.RawValue = "Insert Value 2";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-                int repeatInstance = Int32.Parse(ctlInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Update
-                ctlValue0.RawValue = "Update Value 0";
-                ctlValue1.RawValue = "Update Value 1";
-                ctlValue1.RawValue = "Update Value 2";
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Partial Delete
-                ctlValue0.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-
-                    Assert.IsNull(dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Delete All
-                ctlValue1.RawValue = null;
-                ctlValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNull(dbInstance);
-                }
-            }
-            finally
-            {
-                RemoveProjectMetadata(project);
-            }
+            SingleContainerTest(false, true);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ApplicationException))]
-        public void CRUD_SingleNonRepeatingContainerWithData()
+        public void SingleNonRepeatingContainerInsertWithData()
         {
-            string project = "Unit Test Project";
-            string subject = "Unit Test Subject";
-
-            AddProjectMetadata(project, null, "Unit Test Root Container", false, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-
-            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
-            EAVContextController controller = new EAVContextController();
-
-            ctlProject.DataSource = controller.Projects;
-            ctlProject.DataBind();
-
-            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
-            EAVInstanceContextControl ctlInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-            EAVTextBox ctlValue0 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue1 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlValue2 = ((IEAVValueControlContainer)ctlInstance.ContextChildren.ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            try
-            {
-                // First Insert
-                ctlValue0.RawValue = "Insert Value 0";
-                ctlValue1.RawValue = "Insert Value 1";
-                ctlValue2.RawValue = "Insert Value 2";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-                int repeatInstance = Int32.Parse(ctlInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == repeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlInstance.ContextParent.ContextKey).SingleOrDefault();
-
-                    Assert.IsNotNull(dbInstance);
-                    Assert.IsTrue(dbInstance.Values.Any());
-                    Assert.AreEqual(ctlValue0.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue1.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlValue2.RawValue, dbInstance.Values.Where(it => it.Attribute.Name == ctlValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Second Insert
-                ctlInstance.ContextKey = null;
-                ctlProject.DataBind();
-
-                ctlValue0.RawValue = "Insert Value 3";
-                ctlValue1.RawValue = "Insert Value 4";
-                ctlValue2.RawValue = "Insert Value 5";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlInstance.ContextKey));
-
-                controller.Save(ctlProject);
-            }
-            finally
-            {
-                RemoveProjectMetadata(project);
-            }
+            SingleContainerTest(false, false);
         }
 
         [TestMethod]
-        public void CRUD_ParentNonRepeatingChildNonRepeatingContainersWithoutData()
+        public void ParentNonRepeatingChildNonRepeatingContainersCRUD()
+        {
+            ParentChildContainersTest(false, false);
+        }
+
+        [TestMethod]
+        public void ParentNonRepeatingChildRepeatingContainersCRUD()
+        {
+            ParentChildContainersTest(false, true);
+        }
+
+        [TestMethod]
+        public void ParentRepeatingChildNonRepeatingContainersCRUD()
+        {
+            ParentChildContainersTest(true, false);
+        }
+
+        [TestMethod]
+        public void ParentRepeatingChildRepeatingContainersCRUD()
+        {
+            ParentChildContainersTest(true, true);
+        }
+
+        [TestMethod]
+        public void ParentNonRepeatingChildNonRepeatingContainersWithoutDataDeletingParent()
         {
             string project = "Unit Test Project";
             string subject = "Unit Test Subject";
@@ -649,60 +624,6 @@ namespace EAVEntitiesTest
                     Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
                 }
 
-                // Parent Update
-                ctlParentValue0.RawValue = "Update Parent Value 0";
-                ctlParentValue1.RawValue = "Update Parent Value 1";
-                ctlParentValue2.RawValue = "Update Parent Value 2";
-
-                // Child Update
-                ctlChildValue0.RawValue = "Update Child Value 0";
-                ctlChildValue1.RawValue = "Update Child Value 1";
-                ctlChildValue2.RawValue = "Update Child Value 2";
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNotNull(dbChildInstance);
-                    Assert.IsTrue(dbChildInstance.Values.Any());
-
-                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Child Delete
-                ctlChildValue0.RawValue = null;
-                ctlChildValue1.RawValue = null;
-                ctlChildValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNull(dbChildInstance);
-                }
-
                 // Parent Delete
                 ctlParentValue0.RawValue = null;
                 ctlParentValue1.RawValue = null;
@@ -713,78 +634,10 @@ namespace EAVEntitiesTest
                 using (EAVEntityContext ctx = new EAVEntityContext())
                 {
                     ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-
-                    Assert.IsNull(dbParentInstance);
-                }
-            }
-            finally
-            {
-                RemoveProjectMetadata(project);
-            }
-        }
-
-        [TestMethod]
-        public void CRUD_ParentNonRepeatingChildRepeatingContainersWithoutData()
-        {
-            string project = "Unit Test Project";
-            string subject = "Unit Test Subject";
-
-            AddProjectMetadata(project, null, "Unit Test Root Container", false, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-            AddProjectMetadata(project, "Unit Test Root Container", "Unit Test Child Container", true, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-
-            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
-            EAVContextController controller = new EAVContextController();
-
-            ctlProject.DataSource = controller.Projects;
-            ctlProject.DataBind();
-
-            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
-            EAVInstanceContextControl ctlParentInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-
-            EAVTextBox ctlParentValue0 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlParentValue1 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlParentValue2 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            EAVInstanceContextControl ctlChildInstance = ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Container).ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-
-            EAVTextBox ctlChildValue0 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlChildValue1 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlChildValue2 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            try
-            {
-                // Parent Insert
-                ctlParentValue0.RawValue = "Insert Parent Value 0";
-                ctlParentValue1.RawValue = "Insert Parent Value 1";
-                ctlParentValue2.RawValue = "Insert Parent Value 2";
-
-                // Child Insert
-                ctlChildValue0.RawValue = "Insert Child Value 0";
-                ctlChildValue1.RawValue = "Insert Child Value 1";
-                ctlChildValue2.RawValue = "Insert Child Value 2";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
-                int parentRepeatInstance = Int32.Parse(ctlParentInstance.ContextKey);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
-                int childRepeatInstance = Int32.Parse(ctlChildInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
                     ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
 
                     Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
+                    Assert.IsFalse(dbParentInstance.Values.Any());
 
                     Assert.IsNotNull(dbChildInstance);
                     Assert.IsTrue(dbChildInstance.Values.Any());
@@ -792,364 +645,7 @@ namespace EAVEntitiesTest
                     Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
                     Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
                     Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
 
-                // Parent Update
-                ctlParentValue0.RawValue = "Update Parent Value 0";
-                ctlParentValue1.RawValue = "Update Parent Value 1";
-                ctlParentValue2.RawValue = "Update Parent Value 2";
-
-                // Child Update
-                ctlChildValue0.RawValue = "Update Child Value 0";
-                ctlChildValue1.RawValue = "Update Child Value 1";
-                ctlChildValue2.RawValue = "Update Child Value 2";
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNotNull(dbChildInstance);
-                    Assert.IsTrue(dbChildInstance.Values.Any());
-
-                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Child Delete
-                ctlChildValue0.RawValue = null;
-                ctlChildValue1.RawValue = null;
-                ctlChildValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNull(dbChildInstance);
-                }
-
-                // Parent Delete
-                ctlParentValue0.RawValue = null;
-                ctlParentValue1.RawValue = null;
-                ctlParentValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-
-                    Assert.IsNull(dbParentInstance);
-                }
-            }
-            finally
-            {
-                RemoveProjectMetadata(project);
-            }
-        }
-
-        [TestMethod]
-        public void CRUD_ParentRepeatingChildNonRepeatingContainersWithoutData()
-        {
-            string project = "Unit Test Project";
-            string subject = "Unit Test Subject";
-
-            AddProjectMetadata(project, null, "Unit Test Root Container", true, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-            AddProjectMetadata(project, "Unit Test Root Container", "Unit Test Child Container", false, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-
-            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
-            EAVContextController controller = new EAVContextController();
-
-            ctlProject.DataSource = controller.Projects;
-            ctlProject.DataBind();
-
-            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
-            EAVInstanceContextControl ctlParentInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-
-            EAVTextBox ctlParentValue0 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlParentValue1 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlParentValue2 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            EAVInstanceContextControl ctlChildInstance = ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Container).ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-
-            EAVTextBox ctlChildValue0 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlChildValue1 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlChildValue2 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            try
-            {
-                // Parent Insert
-                ctlParentValue0.RawValue = "Insert Parent Value 0";
-                ctlParentValue1.RawValue = "Insert Parent Value 1";
-                ctlParentValue2.RawValue = "Insert Parent Value 2";
-
-                // Child Insert
-                ctlChildValue0.RawValue = "Insert Child Value 0";
-                ctlChildValue1.RawValue = "Insert Child Value 1";
-                ctlChildValue2.RawValue = "Insert Child Value 2";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
-                int parentRepeatInstance = Int32.Parse(ctlParentInstance.ContextKey);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
-                int childRepeatInstance = Int32.Parse(ctlChildInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNotNull(dbChildInstance);
-                    Assert.IsTrue(dbChildInstance.Values.Any());
-
-                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Parent Update
-                ctlParentValue0.RawValue = "Update Parent Value 0";
-                ctlParentValue1.RawValue = "Update Parent Value 1";
-                ctlParentValue2.RawValue = "Update Parent Value 2";
-
-                // Child Update
-                ctlChildValue0.RawValue = "Update Child Value 0";
-                ctlChildValue1.RawValue = "Update Child Value 1";
-                ctlChildValue2.RawValue = "Update Child Value 2";
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNotNull(dbChildInstance);
-                    Assert.IsTrue(dbChildInstance.Values.Any());
-
-                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Child Delete
-                ctlChildValue0.RawValue = null;
-                ctlChildValue1.RawValue = null;
-                ctlChildValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNull(dbChildInstance);
-                }
-
-                // Parent Delete
-                ctlParentValue0.RawValue = null;
-                ctlParentValue1.RawValue = null;
-                ctlParentValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-
-                    Assert.IsNull(dbParentInstance);
-                }
-            }
-            finally
-            {
-                RemoveProjectMetadata(project);
-            }
-        }
-
-        [TestMethod]
-        public void CRUD_ParentRepeatingChildRepeatingContainersWithoutData()
-        {
-            string project = "Unit Test Project";
-            string subject = "Unit Test Subject";
-
-            AddProjectMetadata(project, null, "Unit Test Root Container", true, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-            AddProjectMetadata(project, "Unit Test Root Container", "Unit Test Child Container", true, subject, "Unit Test Attribute 1", "Unit Test Attribute 2", "Unit Test Attribute 3");
-
-            EAVProjectContextControl ctlProject = BuildContextControls(project, subject);
-            EAVContextController controller = new EAVContextController();
-
-            ctlProject.DataSource = controller.Projects;
-            ctlProject.DataBind();
-
-            EAVSubjectContextControl ctlSubject = ctlProject.ContextChildren.ElementAt(0) as EAVSubjectContextControl;
-            EAVInstanceContextControl ctlParentInstance = ctlSubject.ContextChildren.ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-
-            EAVTextBox ctlParentValue0 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlParentValue1 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlParentValue2 = ((IEAVValueControlContainer)ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            EAVInstanceContextControl ctlChildInstance = ctlParentInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Container).ElementAt(0).ContextChildren.ElementAt(0) as EAVInstanceContextControl;
-
-            EAVTextBox ctlChildValue0 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(0)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlChildValue1 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(1)).ValueControls.ElementAt(0) as EAVTextBox;
-            EAVTextBox ctlChildValue2 = ((IEAVValueControlContainer)ctlChildInstance.ContextChildren.Where(it => it.ContextControlType == ContextControlType.Attribute).ElementAt(2)).ValueControls.ElementAt(0) as EAVTextBox;
-
-            try
-            {
-                // Parent Insert
-                ctlParentValue0.RawValue = "Insert Parent Value 0";
-                ctlParentValue1.RawValue = "Insert Parent Value 1";
-                ctlParentValue2.RawValue = "Insert Parent Value 2";
-
-                // Child Insert
-                ctlChildValue0.RawValue = "Insert Child Value 0";
-                ctlChildValue1.RawValue = "Insert Child Value 1";
-                ctlChildValue2.RawValue = "Insert Child Value 2";
-
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
-                Assert.IsTrue(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
-
-                controller.Save(ctlProject);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlParentInstance.ContextKey));
-                int parentRepeatInstance = Int32.Parse(ctlParentInstance.ContextKey);
-
-                Assert.IsFalse(String.IsNullOrWhiteSpace(ctlChildInstance.ContextKey));
-                int childRepeatInstance = Int32.Parse(ctlChildInstance.ContextKey);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNotNull(dbChildInstance);
-                    Assert.IsTrue(dbChildInstance.Values.Any());
-
-                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Parent Update
-                ctlParentValue0.RawValue = "Update Parent Value 0";
-                ctlParentValue1.RawValue = "Update Parent Value 1";
-                ctlParentValue2.RawValue = "Update Parent Value 2";
-
-                // Child Update
-                ctlChildValue0.RawValue = "Update Child Value 0";
-                ctlChildValue1.RawValue = "Update Child Value 1";
-                ctlChildValue2.RawValue = "Update Child Value 2";
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNotNull(dbChildInstance);
-                    Assert.IsTrue(dbChildInstance.Values.Any());
-
-                    Assert.AreEqual(ctlChildValue0.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue1.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlChildValue2.RawValue, dbChildInstance.Values.Where(it => it.Attribute.Name == ctlChildValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                }
-
-                // Child Delete
-                ctlChildValue0.RawValue = null;
-                ctlChildValue1.RawValue = null;
-                ctlChildValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-                    ContainerInstance dbChildInstance = dbParentInstance.ChildContainerInstances.FirstOrDefault();
-
-                    Assert.IsNotNull(dbParentInstance);
-                    Assert.IsTrue(dbParentInstance.Values.Any());
-
-                    Assert.AreEqual(ctlParentValue0.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue0.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue1.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue1.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-                    Assert.AreEqual(ctlParentValue2.RawValue, dbParentInstance.Values.Where(it => it.Attribute.Name == ctlParentValue2.ContextParent.ContextKey).Select(it => it.RawValue).SingleOrDefault());
-
-                    Assert.IsNull(dbChildInstance);
-                }
-
-                // Parent Delete
-                ctlParentValue0.RawValue = null;
-                ctlParentValue1.RawValue = null;
-                ctlParentValue2.RawValue = null;
-
-                controller.Save(ctlProject);
-
-                using (EAVEntityContext ctx = new EAVEntityContext())
-                {
-                    ContainerInstance dbParentInstance = ctx.ContainerInstances.Where(it => it.RepeatInstance == parentRepeatInstance && it.Subject.MemberID == subject && it.Container.Name == ctlParentInstance.ContextParent.ContextKey && it.ParentContainerInstance == null).SingleOrDefault();
-
-                    Assert.IsNull(dbParentInstance);
                 }
             }
             finally

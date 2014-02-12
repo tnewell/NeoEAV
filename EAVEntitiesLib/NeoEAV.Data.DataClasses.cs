@@ -28,6 +28,7 @@ namespace NeoEAV.Objects
 
         ContextType ContextType { get; }
 
+        // TODO: Maybe remove as implementation detail
         ContextType BindingType { get; }
 
         object DataSource { get; set; }
