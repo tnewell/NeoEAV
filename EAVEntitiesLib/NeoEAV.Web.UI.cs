@@ -71,18 +71,26 @@ namespace NeoEAV.Web.UI
                 if (String.IsNullOrWhiteSpace(repeatInstance))
                 {
                     var instances = subject.ContainerInstances.Where(it => it.Container == container && it.ParentContainerInstance == parentInstance);
-                    int newRepeatInstance = instances.Any() ? instances.Max(it => it.RepeatInstance) + 1 : 0;
 
-                    instance = new ContainerInstance() { Container = container, Subject = subject, ParentContainerInstance = parentInstance, RepeatInstance = newRepeatInstance };
+                    if (!instances.Any() || container.IsRepeating)
+                    {
+                        int newRepeatInstance = instances.Any() ? instances.Max(it => it.RepeatInstance) + 1 : 0;
 
-                    if (parentInstance == null)
-                        subject.ContainerInstances.Add(instance);
+                        instance = new ContainerInstance() { Container = container, Subject = subject, ParentContainerInstance = parentInstance, RepeatInstance = newRepeatInstance };
+
+                        if (parentInstance == null)
+                            subject.ContainerInstances.Add(instance);
+                        else
+                            parentInstance.ChildContainerInstances.Add(instance);
+                    }
                     else
-                        parentInstance.ChildContainerInstances.Add(instance);
+                    {
+                        throw (new ApplicationException(String.Format("Attempt to acquire container instance failed. Container '{0}' is non-repeating and already has repeat instance {1} for subject '{2}'.", container.Name, instances.First().RepeatInstance, subject.MemberID)));
+                    }
                 }
                 else
                 {
-                    throw (new ApplicationException(String.Format("Attempt to create new Container Instance when Repeat Instance not found disallowed. Repeat Instance = '{0}'.", repeatInstance)));
+                    throw (new ApplicationException(String.Format("Attempt to acquire container instance failed. No container instance found for container '{0}' and subject '{1}' having repeat instance {2}.", container.Name, subject.MemberID, repeatInstance)));
                 }
             }
 
