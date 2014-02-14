@@ -36,6 +36,8 @@ namespace NeoEAV.Objects
         string ContextKey { get; set; }
 
         object DataItem { get; }
+
+        void DataBind();
     }
 
     public interface IEAVValueControlContainer
