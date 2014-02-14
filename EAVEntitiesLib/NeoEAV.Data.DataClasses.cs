@@ -53,6 +53,8 @@ namespace NeoEAV.Objects
         //object DataItem { get; }
 
         string RawValue { get; set; }
+
+        void DataBind();
     }
 }
 

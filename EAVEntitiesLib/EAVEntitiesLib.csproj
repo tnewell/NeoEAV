@@ -41,6 +41,8 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
@@ -52,7 +54,9 @@
   <ItemGroup>
     <Compile Include="NeoEAV.Data.DataClasses.cs" />
     <Compile Include="NeoEAV.Web.UI.cs" />
-    <Compile Include="NeoEAV.Windows.UI.cs" />
+    <Compile Include="NeoEAV.Windows.UI.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
