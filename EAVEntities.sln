@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EAVEntitiesLib", "EAVEntiti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeoEAVWeb", "NeoEAVWeb\NeoEAVWeb.csproj", "{ED5E5104-DAE6-48B1-9CD1-8A195BC250EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeoEAVWindows", "NeoEAVWindows\NeoEAVWindows.csproj", "{ED552909-2D33-4720-809E-E89D54B9D08D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{ED5E5104-DAE6-48B1-9CD1-8A195BC250EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED5E5104-DAE6-48B1-9CD1-8A195BC250EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED5E5104-DAE6-48B1-9CD1-8A195BC250EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED552909-2D33-4720-809E-E89D54B9D08D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED552909-2D33-4720-809E-E89D54B9D08D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED552909-2D33-4720-809E-E89D54B9D08D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED552909-2D33-4720-809E-E89D54B9D08D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
