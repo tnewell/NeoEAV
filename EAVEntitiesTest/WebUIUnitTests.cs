@@ -13,6 +13,7 @@ using Attribute = NeoEAV.Data.DataClasses.Attribute;
 
 namespace EAVEntitiesTest
 {
+
     [TestClass]
     public class WebUIUnitTests
     {

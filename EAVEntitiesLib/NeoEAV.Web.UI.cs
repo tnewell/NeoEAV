@@ -1,13 +1,11 @@
-﻿using System;
+﻿using NeoEAV.Data.DataClasses;
+using NeoEAV.Objects;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-
-using NeoEAV.Data.DataClasses;
-using NeoEAV.Objects;
 
 using Attribute = NeoEAV.Data.DataClasses.Attribute;
 using Container = NeoEAV.Data.DataClasses.Container;
@@ -15,6 +13,8 @@ using Container = NeoEAV.Data.DataClasses.Container;
 
 namespace NeoEAV.Web.UI
 {
+    using NeoEAV.Special;
+
     public partial class EAVContextController
     {
         private EAVEntityContext context = new EAVEntityContext();
@@ -201,59 +201,23 @@ namespace NeoEAV.Web.UI
 
         public static IEAVContextControl FindAncestor(Control control, ContextControlType ancestorContextType)
         {
-            Control container = control != null ? control.Parent : null;
-            while (container != null)
-            {
-                if (container is IEAVContextControl && ((IEAVContextControl)container).ContextControlType == ancestorContextType)
-                {
-                    return (container as IEAVContextControl);
-                }
-
-                container = container.Parent;
-            }
-
-            return (null);
+            return (control.GetParent<Control>(ancestorContextType));
         }
 
         public static T FindAncestorDataItem<T>(Control control, ContextControlType ancestorContextType) where T : class
         {
-            IEAVContextControl container = FindAncestor(control, ancestorContextType);
+            IEAVContextControl container = control.GetParent<Control>(ancestorContextType);
 
-            if (container != null)
-            {
-                return (DataBinder.GetDataItem(container) as T);
-            }
-
-            return (null);
+            return (container != null ? container.DataItem as T : null);
         }
 
         public abstract IEAVContextControl ContextParent { get; }
-
-        private void GetChildrenRecursive(Control ctl, IList<IEAVContextControl> children)
-        {
-            if (ctl is IEAVContextControl)
-            {
-                children.Add(ctl as IEAVContextControl);
-            }
-            else
-            {
-                foreach (Control child in ctl.Controls)
-                    GetChildrenRecursive(child, children);
-            }
-        }
 
         public IEnumerable<IEAVContextControl> ContextChildren
         {
             get
             {
-                List<IEAVContextControl> children = new List<IEAVContextControl>();
-
-                foreach (Control ctl in Controls)
-                {
-                    GetChildrenRecursive(ctl, children);
-                }
-
-                return (children);
+                return (this.GetControls<Control, IEAVContextControl>());
             }
         }
 

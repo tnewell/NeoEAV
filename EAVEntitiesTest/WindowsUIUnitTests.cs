@@ -3,7 +3,6 @@ using System.Linq;
 using System.Windows.Forms;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.TestTools.UnitTesting.Web;
 
 using NeoEAV.Data.DataClasses;
 using NeoEAV.Objects;
