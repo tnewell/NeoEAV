@@ -14,7 +14,7 @@ namespace NeoEAV.Special
 
     public static class NeoEAVExtensions
     {
-        public static IEAVContextControl GetParent<TContainer>(this TContainer container, ContextControlType ancestorContextType) where TContainer : class
+        public static IEAVContextControl GetAncestor<TContainer>(this TContainer container, ContextControlType ancestorContextType) where TContainer : class
         {
             TContainer parent = container != null ? container.GetType().GetProperty("Parent").GetValue(container, null) as TContainer : null;
 
@@ -31,11 +31,16 @@ namespace NeoEAV.Special
             return (null);
         }
 
-        public static IEnumerable<TControl> GetControls<TContainer, TControl>(this TContainer container, bool root = true) where TControl : class
+        public static TItem GetAncestorDataItem<TItem>(IEAVContextControl control) where TItem : class
+        {
+            return (control != null ? control.DataItem as TItem : null);
+        }
+
+        public static IEnumerable<TControl> GetChildren<TContainer, TControl>(this TContainer container, bool firstCall = true) where TControl : class
         {
             List<TControl> controls = new List<TControl>();
 
-            if (!root && container is TControl)
+            if (!firstCall && container is TControl)
             {
                 controls.Add(container as TControl);
             }
@@ -43,7 +48,7 @@ namespace NeoEAV.Special
             {
                 foreach (TContainer child in container.GetType().GetProperty("Controls").GetValue(container, null) as IEnumerable)
                 {
-                    controls.AddRange(GetControls<TContainer, TControl>(child, false));
+                    controls.AddRange(GetChildren<TContainer, TControl>(child, false));
                 }
             }
 

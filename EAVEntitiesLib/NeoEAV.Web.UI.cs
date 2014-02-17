@@ -201,12 +201,12 @@ namespace NeoEAV.Web.UI
 
         public static IEAVContextControl FindAncestor(Control control, ContextControlType ancestorContextType)
         {
-            return (control.GetParent<Control>(ancestorContextType));
+            return (control.GetAncestor<Control>(ancestorContextType));
         }
 
         public static T FindAncestorDataItem<T>(Control control, ContextControlType ancestorContextType) where T : class
         {
-            IEAVContextControl container = control.GetParent<Control>(ancestorContextType);
+            IEAVContextControl container = control.GetAncestor<Control>(ancestorContextType);
 
             return (container != null ? container.DataItem as T : null);
         }
@@ -217,7 +217,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return (this.GetControls<Control, IEAVContextControl>());
+                return (this.GetChildren<Control, IEAVContextControl>());
             }
         }
 
