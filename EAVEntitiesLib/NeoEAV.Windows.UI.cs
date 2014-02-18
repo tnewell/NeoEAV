@@ -3,6 +3,7 @@ using NeoEAV.Objects;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -203,7 +204,7 @@ namespace NeoEAV.Windows.UI
         {
             get
             {
-                return(this.GetChildren<Control, IEAVContextControl>());
+                return(this.GetChildren<Control>());
             }
         }
 
@@ -276,22 +277,28 @@ namespace NeoEAV.Windows.UI
             if (DataBinding != null)
                 DataBinding(this, EventArgs.Empty);
         }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            if (DesignMode)
+            {
+                Rectangle boundingBox = e.ClipRectangle;
+
+                boundingBox.Inflate(-1, -1);
+
+                e.Graphics.DrawRectangle(new Pen(Color.DarkGray), boundingBox);
+
+                SizeF captionSize = e.Graphics.MeasureString(ContextControlType.ToString(), SystemFonts.CaptionFont);
+
+                e.Graphics.DrawString(ContextControlType.ToString(), SystemFonts.CaptionFont, SystemBrushes.GrayText, e.ClipRectangle.Width - captionSize.Width, e.ClipRectangle.Height - captionSize.Height);
+            }
+
+            base.OnPaint(e);
+        }
     }
 
     public partial class EAVProjectContextControl : EAVContextControl
     {
-        public override Color BackColor
-        {
-            get
-            {
-                return (DesignMode ? Color.AliceBlue : base.BackColor);
-            }
-            set
-            {
-                base.BackColor = value;
-            }
-        }
-
         public override IEAVContextControl ContextParent { get { return (null); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Project); } }
@@ -315,18 +322,6 @@ namespace NeoEAV.Windows.UI
 
     public partial class EAVSubjectContextControl : EAVContextControl
     {
-        public override Color BackColor
-        {
-            get
-            {
-                return (DesignMode ? Color.Aquamarine : base.BackColor);
-            }
-            set
-            {
-                base.BackColor = value;
-            }
-        }
-
         public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Project)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Subject); } }
@@ -359,18 +354,6 @@ namespace NeoEAV.Windows.UI
 
     public partial class EAVContainerContextControl : EAVContextControl
     {
-        public override Color BackColor
-        {
-            get
-            {
-                return (DesignMode ? Color.Beige : base.BackColor);
-            }
-            set
-            {
-                base.BackColor = value;
-            }
-        }
-
         public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Instance) ?? ContextAncestor(ContextControlType.Subject)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Container); } }
@@ -406,18 +389,6 @@ namespace NeoEAV.Windows.UI
 
     public partial class EAVInstanceContextControl : EAVContextControl
     {
-        public override Color BackColor
-        {
-            get
-            {
-                return (DesignMode ? Color.Ivory : base.BackColor);
-            }
-            set
-            {
-                base.BackColor = value;
-            }
-        }
-
         public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Container)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Instance); } }
@@ -451,18 +422,6 @@ namespace NeoEAV.Windows.UI
 
     public partial class EAVAttributeContextControl : EAVContextControl, IEAVValueControlContainer
     {
-        public override Color BackColor
-        {
-            get
-            {
-                return (DesignMode ? Color.LightPink : base.BackColor);
-            }
-            set
-            {
-                base.BackColor = value;
-            }
-        }
-
         public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Instance)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Attribute); } }
@@ -547,27 +506,5 @@ namespace NeoEAV.Windows.UI
 
             RawValue = instance != null ? instance.Values.Where(it => it.Attribute == attribute).Select(it => it.RawValue).SingleOrDefault() : null;
         }
-
-        //public override bool Enabled
-        //{
-        //    get
-        //    {
-        //        return (base.Enabled && EAVContextControl.FindAncestorDataItem<Subject>(this, ContextControlType.Subject) != null);
-        //    }
-        //    set
-        //    {
-        //        base.Enabled = value;
-        //    }
-        //}
-
-        //protected override void OnDataBinding(EventArgs e)
-        //{
-        //    ContainerInstance instance = EAVContextControl.FindAncestorDataItem<ContainerInstance>(this, ContextControlType.Instance);
-        //    Attribute attribute = EAVContextControl.FindAncestorDataItem<Attribute>(this, ContextControlType.Attribute);
-
-        //    RawValue = instance != null ? instance.Values.Where(it => it.Attribute == attribute).Select(it => it.RawValue).SingleOrDefault() : null;
-
-        //    base.OnDataBinding(e);
-        //}
     }
 }

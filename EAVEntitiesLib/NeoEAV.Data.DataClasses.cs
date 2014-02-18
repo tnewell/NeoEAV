@@ -36,19 +36,19 @@ namespace NeoEAV.Special
             return (control != null ? control.DataItem as TItem : null);
         }
 
-        public static IEnumerable<TControl> GetChildren<TContainer, TControl>(this TContainer container, bool firstCall = true) where TControl : class
+        public static IEnumerable<IEAVContextControl> GetChildren<TContainer>(this TContainer container, bool firstCall = true)
         {
-            List<TControl> controls = new List<TControl>();
+            List<IEAVContextControl> controls = new List<IEAVContextControl>();
 
-            if (!firstCall && container is TControl)
+            if (!firstCall && container is IEAVContextControl)
             {
-                controls.Add(container as TControl);
+                controls.Add(container as IEAVContextControl);
             }
             else
             {
                 foreach (TContainer child in container.GetType().GetProperty("Controls").GetValue(container, null) as IEnumerable)
                 {
-                    controls.AddRange(GetChildren<TContainer, TControl>(child, false));
+                    controls.AddRange(GetChildren<TContainer>(child, false));
                 }
             }
 
@@ -74,7 +74,6 @@ namespace NeoEAV.Objects
 
         ContextType ContextType { get; }
 
-        // TODO: Maybe remove as implementation detail
         ContextType BindingType { get; }
 
         object DataSource { get; set; }

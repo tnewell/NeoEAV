@@ -19,11 +19,6 @@ namespace NeoEAV.Web.UI
     {
         private EAVEntityContext context = new EAVEntityContext();
 
-        private static T GetDataItem<T>(IEAVContextControl control) where T : class
-        {
-            return (control != null ? control.DataItem as T : null);
-        }
-
         private Value AcquireValue(Attribute attribute, ContainerInstance instance, bool createIfMissing)
         {
             Value value = instance != null ? instance.Values.SingleOrDefault(it => it.Attribute == attribute) : null;
@@ -60,8 +55,8 @@ namespace NeoEAV.Web.UI
 
         private ContainerInstance AcquireContainerInstance(IEAVContextControl control, ContainerInstance parentInstance, string repeatInstance, bool createIfMissing)
         {
-            Container container = GetDataItem<Container>(control.ContextParent);
-            Subject subject = parentInstance != null ? parentInstance.Subject : container != null ? GetDataItem<Subject>(control.ContextParent.ContextParent) : null;
+            Container container = NeoEAVExtensions.GetAncestorDataItem<Container>(control.ContextParent);
+            Subject subject = parentInstance != null ? parentInstance.Subject : container != null ? NeoEAVExtensions.GetAncestorDataItem<Subject>(control.ContextParent.ContextParent) : null;
 
             ContainerInstance instance = subject != null ? subject.ContainerInstances.SingleOrDefault(it => it.Container == container && it.ParentContainerInstance == parentInstance && it.RepeatInstance.ToString() == repeatInstance) : null;
             bool parentInstanceCorrect = container == null || (container.ParentContainer != null ^ parentInstance == null);
@@ -137,7 +132,7 @@ namespace NeoEAV.Web.UI
                     }
                     break;
                 case ContextControlType.Attribute:
-                    Attribute attribute = GetDataItem<Attribute>(control);
+                    Attribute attribute = NeoEAVExtensions.GetAncestorDataItem<Attribute>(control);
 
                     if (control is IEAVValueControlContainer)
                     {
@@ -199,9 +194,9 @@ namespace NeoEAV.Web.UI
     {
         protected bool myBind = false;
 
-        public static IEAVContextControl FindAncestor(Control control, ContextControlType ancestorContextType)
+        public IEAVContextControl ContextAncestor(ContextControlType ancestorContextType)
         {
-            return (control.GetAncestor<Control>(ancestorContextType));
+            return (this.GetAncestor<Control>(ancestorContextType));
         }
 
         public static T FindAncestorDataItem<T>(Control control, ContextControlType ancestorContextType) where T : class
@@ -217,7 +212,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return (this.GetChildren<Control, IEAVContextControl>());
+                return (this.GetChildren<Control>());
             }
         }
 
@@ -300,7 +295,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVSubjectContextControl : EAVContextControl
     {
-        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Project)); } }
+        public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Project)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Subject); } }
 
@@ -332,7 +327,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVContainerContextControl : EAVContextControl
     {
-        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Instance) ?? FindAncestor(this, ContextControlType.Subject)); } }
+        public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Instance) ?? ContextAncestor(ContextControlType.Subject)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Container); } }
 
@@ -365,7 +360,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVInstanceContextControl : EAVContextControl
     {
-        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Container)); } }
+        public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Container)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Instance); } }
 
@@ -398,7 +393,7 @@ namespace NeoEAV.Web.UI
 
     public partial class EAVAttributeContextControl : EAVContextControl, IEAVValueControlContainer
     {
-        public override IEAVContextControl ContextParent { get { return (FindAncestor(this, ContextControlType.Instance)); } }
+        public override IEAVContextControl ContextParent { get { return (ContextAncestor(ContextControlType.Instance)); } }
 
         public override ContextControlType ContextControlType { get { return (ContextControlType.Attribute); } }
             
@@ -459,7 +454,7 @@ namespace NeoEAV.Web.UI
         {
             get
             {
-                return (EAVContextControl.FindAncestor(this, ContextControlType.Attribute));
+                return (this.GetAncestor<Control>(ContextControlType.Attribute));
             }
         }
 
@@ -569,7 +564,7 @@ namespace NeoEAV.Web.UI
                     Container container = DataItem as Container;
                     if (container != null)
                     {
-                        Control subjectControl = FindAncestor(this, ContextControlType.Subject) as Control;
+                        Control subjectControl = ContextAncestor(ContextControlType.Subject) as Control;
                         if (subjectControl != null && DataBinder.GetPropertyValue(subjectControl, "DataSource") == null)
                             subjectControl.DataBind();
 
