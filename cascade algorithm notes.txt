@@ -1,0 +1,236 @@
+
+Project
+
+	private bool inBind;
+	private bool myBind;
+
+	BindingType { get; set; }
+
+	ContextType { get; }
+
+	DataSource
+
+		<set value>
+
+		myBind = !inBind
+
+	DataBind()
+
+		DoCascade()
+
+	ContextKey
+
+		<set value>
+
+		myBind = !inBind
+
+		if (!inBind)
+		{
+			DoCascade()
+		}
+
+	RefreshDataSource()
+
+	DoCascade
+
+		BindingType = myBind ? ContextType : ParentContext.BindingType
+
+		if (!myBind && (ContextType.HasFlag(Data) || BindingType.HasFlag(MetaData)))
+		{
+			inBind = true;
+
+			RefreshDataSource()
+
+			if (DynamicContextKey)
+				ContextKey = null
+
+			inBind = false;
+		}
+
+		Children.DataBind()
+
+Subject
+
+	DataSource
+
+		<set value>
+
+		myBind = !inBind
+
+	DataBind()
+
+		DoCascade()
+
+	ContextKey
+
+		<set value>
+
+		myBind = !inBind
+
+		if (!inBind)
+		{
+			DoCascade()
+		}
+
+	RefreshDataSource()
+
+		DataSource = MyProject != null ? MyProject.Subjects : null
+
+	DoCascade
+
+		BindingType = myBind ? ContextType : ParentContext.BindingType
+
+		if (!myBind && (ContextType.HasFlag(Data) || BindingType.HasFlag(MetaData)))
+		{
+			inBind = true;
+
+			RefreshDataSource()
+
+			if (DynamicContextKey)
+				ContextKey = null
+
+			inBind = false;
+		}
+
+		Children.DataBind()
+
+Container
+
+	DataSource
+
+		<set value>
+
+		myBind = !inBind
+
+	DataBind()
+
+		DoCascade()
+
+	ContextKey
+
+		<set value>
+
+		myBind = !inBind
+
+		if (!inBind)
+		{
+			DoCascade()
+		}
+
+	RefreshDataSource()
+		
+		DataSource = MyProject != null ? MyProject.Containers.Where(ParentContainer == MyParentContainer) : null
+
+	DoCascade
+
+		BindingType = myBind ? ContextType : ParentContext.BindingType
+
+		if (!myBind && (ContextType.HasFlag(Data) || BindingType.HasFlag(MetaData)))
+		{
+			inBind = true;
+
+			RefreshDataSource()
+
+			if (DynamicContextKey)
+				ContextKey = null
+
+			inBind = false;
+		}
+
+		Children.DataBind()
+
+Instance
+
+	DataSource
+
+		<set value>
+
+		myBind = !inBind
+
+	DataBind()
+
+		DoCascade()
+
+	ContextKey
+
+		<set value>
+
+		myBind = !inBind
+
+		if (!inBind)
+		{
+			DoCascade()
+		}
+
+	RefreshDataSource()
+
+		DataSource = MySubject != null ? MySubject.Instances.Where(Container == MyContainer && ParentInstance == MyParentInstance) : null
+
+	DoCascade
+
+		BindingType = myBind ? ContextType : ParentContext.BindingType
+
+		if (!myBind && (ContextType.HasFlag(Data) || BindingType.HasFlag(MetaData)))
+		{
+			inBind = true;
+
+			RefreshDataSource()
+
+			if (DynamicContextKey)
+				ContextKey = null
+
+			inBind = false;
+		}
+
+		Children.DataBind()
+
+Attribute
+
+	DataSource
+
+		<set value>
+
+		myBind = !inBind
+
+	DataBind()
+
+		DoCascade()
+
+	ContextKey
+
+		<set value>
+
+		myBind = !inBind
+
+		if (!inBind)
+		{
+			DoCascade()
+		}
+
+	RefreshDataSource()
+
+		DataSource = MyContainer != null ? MyContainer.Attributes : null
+
+	DoCascade
+
+		BindingType = myBind ? ContextType : ParentContext.BindingType
+
+		if (!myBind && (ContextType.HasFlag(Data) || BindingType.HasFlag(MetaData)))
+		{
+			inBind = true;
+
+			RefreshDataSource()
+
+			if (DynamicContextKey)
+				ContextKey = null
+
+			inBind = false;
+		}
+
+		Children.DataBind()
+
+Value
+
+	DataBind()
+
+		RawValue = MyInstance != null ? MyInstance.Values.Where(Attribute == MyAttribute) : null
