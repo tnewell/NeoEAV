@@ -1,4 +1,5 @@
-﻿
+﻿USE EAV
+
 -- Terms
 
 CREATE TABLE [dbo].[Terms] (
