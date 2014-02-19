@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Attribute = NeoEAV.Data.DataClasses.Attribute;
 
 
-namespace EAVEntitiesTest
+namespace NeoEAVTests
 {
     [Ignore]
     [TestClass]

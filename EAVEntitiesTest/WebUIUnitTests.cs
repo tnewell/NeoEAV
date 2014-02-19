@@ -11,7 +11,7 @@ using NeoEAV.Web.UI;
 using Attribute = NeoEAV.Data.DataClasses.Attribute;
 
 
-namespace EAVEntitiesTest
+namespace NeoEAVTests
 {
 
     [TestClass]

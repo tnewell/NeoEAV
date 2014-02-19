@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EAVEntities", "EAVEntities\EAVEntities.csproj", "{948451BC-904D-4F88-96C6-CB5350A33F69}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EAVEntitiesTest", "EAVEntitiesTest\EAVEntitiesTest.csproj", "{E8B4C52E-A05D-4646-BA41-39132055602C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeoEAVTests", "EAVEntitiesTest\NeoEAVTests.csproj", "{E8B4C52E-A05D-4646-BA41-39132055602C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EAVEntitiesLib", "EAVEntitiesLib\EAVEntitiesLib.csproj", "{AAAEF411-2507-4836-B018-5EBD55100392}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeoEAVLib", "EAVEntitiesLib\NeoEAVLib.csproj", "{AAAEF411-2507-4836-B018-5EBD55100392}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeoEAVWeb", "NeoEAVWeb\NeoEAVWeb.csproj", "{ED5E5104-DAE6-48B1-9CD1-8A195BC250EC}"
 EndProject

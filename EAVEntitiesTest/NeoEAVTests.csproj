@@ -69,9 +69,9 @@
     <Compile Include="WindowsUIUnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EAVEntitiesLib\EAVEntitiesLib.csproj">
+    <ProjectReference Include="..\EAVEntitiesLib\NeoEAVLib.csproj">
       <Project>{aaaef411-2507-4836-b018-5ebd55100392}</Project>
-      <Name>EAVEntitiesLib</Name>
+      <Name>NeoEAVLib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
