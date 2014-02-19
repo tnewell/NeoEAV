@@ -14,6 +14,7 @@ using Attribute = NeoEAV.Data.DataClasses.Attribute;
 
 namespace EAVEntitiesTest
 {
+    [Ignore]
     [TestClass]
     public class DataTests
     {

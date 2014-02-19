@@ -226,8 +226,8 @@ namespace NeoEAV.Data.DataClasses
         [Required, Column("Has_Variable_Units")]
         public bool HasVariableUnits { get; set; }
 
-        [Required, Column("Has_Fixed_Values")]
-        public bool HasFixedValues { get; set; }
+        //[Required, Column("Has_Fixed_Values")]
+        //public bool HasFixedValues { get; set; }
 
         [Required, Column("Container_ID")]
         public int ContainerID { get; set; }

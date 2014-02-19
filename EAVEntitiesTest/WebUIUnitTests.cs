@@ -189,7 +189,6 @@ namespace EAVEntitiesTest
                             dbAttribute.Container = dbContainer;
                             dbAttribute.DataName = attribute;
                             dbAttribute.DisplayName = attribute;
-                            dbAttribute.HasFixedValues = false;
                             dbAttribute.HasVariableUnits = false;
                             dbAttribute.DataType = ctx.DataTypes.Single(it => it.Name == "String");
                             dbAttribute.Term = ctx.Terms.First();

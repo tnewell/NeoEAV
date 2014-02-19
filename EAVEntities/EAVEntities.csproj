@@ -182,6 +182,10 @@
     <Compile Include="Migrations\201306190215204_test2.Designer.cs">
       <DependentUpon>201306190215204_test2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201402190244217_remove_fixed_values.cs" />
+    <Compile Include="Migrations\201402190244217_remove_fixed_values.Designer.cs">
+      <DependentUpon>201402190244217_remove_fixed_values.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -277,6 +281,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201306190215204_test2.resx">
       <DependentUpon>201306190215204_test2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201402190244217_remove_fixed_values.resx">
+      <DependentUpon>201402190244217_remove_fixed_values.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
