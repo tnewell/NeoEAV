@@ -15,12 +15,6 @@ CREATE TABLE [dbo].[Entities] (
     CONSTRAINT [PK_dbo.Entities] PRIMARY KEY CLUSTERED ([Entity_ID] ASC)
 );
 
-CREATE TABLE [dbo].[DataTypes] (
-    [Data_Type_ID] INT            IDENTITY (1, 1) NOT NULL,
-    [Name]         NVARCHAR (MAX) NOT NULL,
-    CONSTRAINT [PK_dbo.DataTypes] PRIMARY KEY CLUSTERED ([Data_Type_ID] ASC)
-);
-
 -- DataTypes
 
 CREATE TABLE [dbo].[DataTypes] (
