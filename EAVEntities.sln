@@ -11,6 +11,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeoEAVWeb", "NeoEAVWeb\NeoE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeoEAVWindows", "NeoEAVWindows\NeoEAVWindows.csproj", "{ED552909-2D33-4720-809E-E89D54B9D08D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A80A540B-EE5D-4BC3-ABC5-A935E67073E7}"
+	ProjectSection(SolutionItems) = preProject
+		core table create script.sql = core table create script.sql
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
